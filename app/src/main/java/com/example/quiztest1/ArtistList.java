@@ -31,11 +31,13 @@ public class ArtistList extends ArrayAdapter<Artist> {
         View listViewItem = inflater.inflate(R.layout.list_layout, null, true);
 
         TextView textViewName = (TextView) listViewItem.findViewById(R.id.textViewName);
+        TextView textViewUrl = (TextView) listViewItem.findViewById(R.id.textViewUrl);
         TextView textViewGenre = (TextView) listViewItem.findViewById(R.id.textViewGenre);
 
         Artist artist = artistList.get(position);
 
         textViewName.setText(artist.getName());
+        textViewUrl.setText(artist.getUrl());
         textViewGenre.setText(artist.getGenre());
         return listViewItem;
     }
