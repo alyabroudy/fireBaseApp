@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">QuizTest1</string>
+    <array name="genres">
+        <item>Rock</item>
+        <item>Sufi</item>
+        <item>POP</item>
+    </array>
+</resources>
