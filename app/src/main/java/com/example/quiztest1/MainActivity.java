@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Artist artist = artistList.get(position);
-                String url = artist.getName();
+                String url = artist.getUrl();
 /*
                 if (artist.getGenre().equals("Akwam")){
                     Toast.makeText(MainActivity.this, "Akwam", Toast.LENGTH_LONG).show();
