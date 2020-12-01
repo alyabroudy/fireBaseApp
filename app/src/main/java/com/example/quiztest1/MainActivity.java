@@ -13,12 +13,14 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.MediaController;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
+
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -27,8 +29,13 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import org.jetbrains.annotations.NotNull;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,36 +53,25 @@ public class MainActivity extends AppCompatActivity {
     //list contains retrieved artists
     List<Artist> artistList;
 
-    String responseContent;
+    OkHttpClient client;
+
+    List<String> responseContent;
 
     EditText editTextName;
     EditText editTextUrl;
     Button buttonAddArtist;
     Spinner spinnerGenres;
     ListView listViewArtists;
+    TextView textViewResponse;
+    ImageView imageView;
+    TextView textViewRate;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        responseContent = "";
-
-        //reference for videoView
-       /* VideoView videoView = (VideoView)  findViewById(R.id.video_view);
-        //String videoPath = "android.resource://"+getPackageName() + "/" + R.raw.video;
-        String videoPath = "https://s305d2.akwam.download/download/1603728998/5f95a4e6843ce/Ratched.S01E08.720p.WEBRip.akwam.net.mp4";
-        Uri uri = Uri.parse(videoPath);
-        videoView.setVideoURI(uri);
-        videoView.start();
-
-        //media controller for the video
-        MediaController mediaController = new MediaController(this);
-        videoView.setMediaController(mediaController);
-        mediaController.setAnchorView(videoView);
-
-*/
+        responseContent = new ArrayList<>();
         databaseArtist = FirebaseDatabase.getInstance().getReference("artists");
 
         editTextName = (EditText) findViewById(R.id.editTextName);
@@ -83,6 +79,9 @@ public class MainActivity extends AppCompatActivity {
         buttonAddArtist = (Button) findViewById(R.id.buttonAddArtist);
         spinnerGenres = (Spinner) findViewById(R.id.spinnerGenres);
         listViewArtists = (ListView) findViewById(R.id.listViewArtist);
+        textViewResponse = (TextView) findViewById(R.id.textView_response);
+        imageView = (ImageView) findViewById(R.id.imageView);
+        textViewRate = (TextView) findViewById(R.id.textView_rate);
 
         //initialize artist list
         artistList = new ArrayList<>();
@@ -91,18 +90,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Artist artist = artistList.get(position);
-                String url = artist.getUrl();
-/*
-                if (artist.getGenre().equals("Akwam")){
-                    Toast.makeText(MainActivity.this, "Akwam", Toast.LENGTH_LONG).show();
-                    url = generateAkwamLink(url);
-                    Toast.makeText(MainActivity.this, url, Toast.LENGTH_LONG).show();
-                }
-
- */
+               String url = artist.getUrl();
+                String type = "video/*"; // It works for all video application
                 Uri uri = Uri.parse(url);
                 Intent in1 = new Intent(Intent.ACTION_VIEW, uri);
-
+                in1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+              //  in1.setPackage("org.videolan.vlc");
+                in1.setDataAndType(uri, type);
+                Log.i("video started", uri.toString());
                 startActivity(in1);
             }
         });
@@ -142,98 +137,207 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private String requestUrl(String url){
-        OkHttpClient client = new OkHttpClient();
 
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                e.printStackTrace();
-            }
+    private void generateAkwamLink(Artist artist){
 
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                if (response.isSuccessful()) {
-                      final String content = response.body().string();
-                    Log.i("akwam method", "c c"+content);
-                    MainActivity.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            responseContent = content;
-                        }
-                    });
+        Log.i("generate Method", "hello 1");
+        //artist.setUrl("https://akwam.co/movie/2719/sky-sharks");
+        //check which page is it
+        String page1 = "akwam.co/movie";
+        String page1Part2 = "akwam.co/episode";
+        String page1Part3 = "akwam.co/show";
 
-                }
-            }
-        });
-        return responseContent;
+        String page2 = "goo-";
+        String page3 = "akwam.co/download";
+
+        if (artist.getUrl().contains(page1) || artist.getUrl().contains(page1Part2) || artist.getUrl().contains(page1Part3))
+        {
+            Log.i("generate Method", "hello page one");
+            //get Second page url
+            fetchAkwamPageOne(artist);
+            Log.i("generate name", artist.getName());
+        }else if(artist.getUrl().contains(page2) )
+        {
+            fetchAkwamPageTwo(artist);
+            Log.i("generate Method", "hello page two");
+        }else if(artist.getUrl().contains(page3) )
+        {
+            Log.i("generate Method", "hello fetch video link");
+            fetchAkwamVideoLink(artist);
+        }
     }
 
-
-    private String generateAkwamLink(String url){
-        Log.d("akwam method", "url first");
-        String responseContent = requestUrl(url);
-
-                    String needCaption = "http://goo-2o.com/link/";
-                    String page2Url=null;
-        Toast.makeText(MainActivity.this, needCaption, Toast.LENGTH_LONG).show();
-
-                    //if link is not a direct download page
-                    if (responseContent.contains(needCaption)){
-                        Toast.makeText(MainActivity.this, "indirect link", Toast.LENGTH_LONG).show();
-                        //find video link location
-                        int page1Pos = responseContent.indexOf( needCaption );
-                        //get goo page
-                        String gooUrl = responseContent.substring(page1Pos ,28);
-                        //make request too goo page to get the v link
-                        responseContent = requestUrl(gooUrl);
-
-                        needCaption = "https://akwam.co";
-
-                        int page2Pos = responseContent.indexOf( needCaption );
-                        //get the line that contains the video link
-
-                        String page2ContentArea = responseContent.substring(page2Pos ,200);
-                        //find the position if beginning of the link
-                        int page2ContentStartPos= page2ContentArea.indexOf("ht" );
-                        //get the rest of the link body
-                        String page2ContentArea2= page2ContentArea.substring(page2ContentStartPos ,200);
-                        //find the position of the end of the link
-                        int page2ContentEndPos = page2ContentArea2.indexOf( "\"" );
-                        //getting the complete link
-                        page2Url= page2ContentArea2.substring( 0 ,page2ContentEndPos);
+    private void fetchAkwamPageOne(final Artist artist){
+        Log.i("akwam fetchAkwamPageOne","start");
+        final String url = artist.getUrl();
+        final StringBuilder builder = new StringBuilder();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Document doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+                    Elements names = doc.select("h1");
+                    //get movie name
+                    for (Element name : names) {
+                      //  builder.append("\n").append("Link : ").append(link.attr("href"))
+                       // builder.append("\n").append("Link : ")
+                         //       .append("\n").append("Text : ").append(link.text());
+                        builder.append(name.text());
+                        break;
                     }
 
-                    if (null != page2Url){
-                       responseContent = requestUrl(page2Url);
+                    databaseArtist.child(artist.getId()).child("name").setValue(builder.toString());
+
+                    //page1 image
+                    String imageCaption = "https://img.akwam.co/thumb/260x380/";
+                    Elements images = doc.select("img[src]");
+                    for (Element image : images) {
+                        //  builder.append("\n").append("Link : ").append(link.attr("href"))
+                        // builder.append("\n").append("Link : ")
+                        //       .append("\n").append("Text : ").append(link.text());
+                        if (image.attr("src").contains(imageCaption))
+                        {
+                            databaseArtist.child(artist.getId()).child("image").setValue(image.attr("src"));
+                            artist.setImage(image.attr("src").toString());
+                            Log.i("image found", image.attr("src").toString());
+                            break;
+                        }
+                    }
+
+                    //page1 rate
+                    String rateCaption = "mx-2";
+                    Elements spans = doc.select("span");
+                    for (Element span : spans) {
+                        //  builder.append("\n").append("Link : ").append(link.attr("href"))
+                        // builder.append("\n").append("Link : ")
+                        //       .append("\n").append("Text : ").append(link.text());
+                        if (span.hasClass(rateCaption))
+                        {
+                            databaseArtist.child(artist.getId()).child("rate").setValue(span.text());
+                            artist.setRate(span.text());
+                            Log.i("rate found", span.text());
+                            break;
+                        }
+                    }
+
+
+                    // page2 links
+                    String p2Caption = "http://goo-2o.com/link/";
+                    Elements links = doc.select("a[href]");
+                    for (Element link : links) {
+                        //  builder.append("\n").append("Link : ").append(link.attr("href"))
+                        // builder.append("\n").append("Link : ")
+                        //       .append("\n").append("Text : ").append(link.text());
+                        if (link.attr("href").contains(p2Caption))
+                        {
+                            databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
+                            artist.setUrl(link.attr("href"));
+                            fetchAkwamPageTwo(artist);
+                            break;
+                        }
+                    }
+
+                } catch (IOException e) {
+                    builder.append("Error : ").append(e.getMessage()).append("\n");
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                       // textViewResponse.setText(builder.toString());
+                        Log.i("akwam method","artikel in method");
+                        Log.i("name",builder.toString());
+                        Log.i("akwam Url",artist.getUrl());
+                    }
+                });
+
+            }
+        }).start();
+        Log.i("akwam fetchAkwamPageOne",artist.getUrl());
+        Log.i("akwam fetchAkwamPageOne","end");
+    }
+
+    private void fetchAkwamPageTwo(final Artist artist){
+        Log.i("akwam fetchAkwamPageTwo","start");
+        final String url = artist.getUrl();
+        final StringBuilder builder = new StringBuilder();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Document doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+
+                    // page3 links fetch akwam link from goo- page
+                    String p3Caption = "akwam.co";
+                    Elements links = doc.select("a[href]");
+                    for (Element link : links) {
+                        if (link.attr("href").contains(p3Caption))
+                        {
+                            databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
+                            artist.setUrl(link.attr("href"));
+                            fetchAkwamVideoLink(artist);
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    builder.append("Error : ").append(e.getMessage()).append("\n");
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                       // textViewResponse.setText(builder.toString());
+                        Log.i("akwam method","artikel in method");
+                        Log.i("name",builder.toString());
+                        Log.i("akwam Url",artist.getUrl());
 
                     }
-        Log.i("akwam method", "url"+needCaption);
-        Log.i("akwam method", "page2url"+page2Url);
-        Toast.makeText(MainActivity.this, needCaption, Toast.LENGTH_LONG).show();
-                    needCaption = "btn-loader";
+                });
 
-                    //find video link location
-                    int contentPos = responseContent.indexOf(needCaption);
-        Log.i("akwam method", "content "+responseContent);
-        Log.i("akwam method", "pos1"+contentPos);
-                    //get the line that contains the video link
-                    String linkContent1 = responseContent.substring(contentPos ,200);
-        Log.i("akwam method", "content1"+linkContent1);
-                    //find the position if beginning of the link
-                    int contentPos2 = linkContent1.indexOf("ht");
-                    //get the rest of the link body
-                    String linkContent2= linkContent1.substring(contentPos2 ,200);
-                    //find the position of the end of the link
-                    int contentPos3 = linkContent2.indexOf("\"" );
-                    //getting the complete link
-                    String linkContent3= linkContent2.substring(0 ,contentPos3);
-        Log.i("akwam method", "url3"+linkContent3);
-                    return linkContent3;
-                 ////////////
+            }
+        }).start();
+        Log.i("akwam fetchAkwamPageTwo","end");
+    }
+
+    private void fetchAkwamVideoLink(final Artist artist){
+        Log.i("akwam fetchAkwamVideoLink","start");
+        final String url = artist.getUrl();
+        final StringBuilder builder = new StringBuilder();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Document doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+                    //page 3 links download page
+                    String p3Caption = "akwam.download";
+                    Elements links = doc.select("a[href]");
+                    for (Element link : links) {
+                        if (link.attr("href").contains(p3Caption))
+                        {
+                            //TODO: later not to save the video link permanently
+                            databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
+                            artist.setUrl(link.attr("href"));
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    builder.append("Error : ").append(e.getMessage()).append("\n");
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // textViewResponse.setText(builder.toString());
+                        Log.i("akwam method","artikel in method");
+                        Log.i("name",builder.toString());
+                        Log.i("akwam Url",artist.getUrl());
+
+                    }
+                });
+
+            }
+        }).start();
+        Log.i("akwam fetchAkwamVideoLink","end");
     }
 
     /**
@@ -251,9 +355,13 @@ public class MainActivity extends AppCompatActivity {
 
             //name = generateAkwamLink(name);
             //create an Artist
-            Artist artist = new Artist(id, name, genre, url);
+            Artist artist = new Artist(id, name, genre, url, "", "");
 
             databaseArtist.child(id).setValue(artist);
+           // if (artist.getGenre().equals("Akwam")){
+                generateAkwamLink(artist);
+                Log.i("akwam method","artikel after method");
+           // }
             Toast.makeText(this, " Artist "+name+" added!", Toast.LENGTH_LONG).show();
         }else {
             Toast.makeText(this,"You need to enter a name", Toast.LENGTH_LONG).show();

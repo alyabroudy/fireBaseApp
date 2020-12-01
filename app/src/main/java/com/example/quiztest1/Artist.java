@@ -5,14 +5,18 @@ public class Artist {
     private String name;
     private String url;
     private String genre;
+    private String image;
+    private String rate;
 
     public Artist(){}
 
-    public Artist(String id, String name, String genre, String url) {
+    public Artist(String id, String name, String genre, String url, String image, String rate) {
         this.id = id;
         this.name = name;
         this.genre = genre;
         this.url = url;
+        this.image = image;
+        this.rate = rate;
     }
 
     public String getUrl() {
@@ -45,5 +49,21 @@ public class Artist {
 
     public void setGenre(String genre) {
         this.genre = genre;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getRate() {
+        return rate;
+    }
+
+    public void setRate(String rate) {
+        this.rate = rate;
     }
 }

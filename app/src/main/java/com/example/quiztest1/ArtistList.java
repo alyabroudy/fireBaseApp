@@ -1,14 +1,19 @@
 package com.example.quiztest1;
 
 import android.app.Activity;
+import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -33,12 +38,22 @@ public class ArtistList extends ArrayAdapter<Artist> {
         TextView textViewName = (TextView) listViewItem.findViewById(R.id.textViewName);
         TextView textViewUrl = (TextView) listViewItem.findViewById(R.id.textViewUrl);
         TextView textViewGenre = (TextView) listViewItem.findViewById(R.id.textViewGenre);
+        ImageView imageViewImage = (ImageView) listViewItem.findViewById(R.id.imageView);
+        TextView textViewRate = (TextView) listViewItem.findViewById(R.id.textView_rate);
 
         Artist artist = artistList.get(position);
 
         textViewName.setText(artist.getName());
         textViewUrl.setText(artist.getUrl());
         textViewGenre.setText(artist.getGenre());
+        if (artist.getImage() != null && !artist.getImage().equals("")){
+            Picasso.get().load(artist.getImage()).into(imageViewImage);
+            Log.i("image url", artist.getImage());
+        }
+        if (artist.getRate() != null){
+            textViewRate.setText(artist.getRate());
+        }
+
         return listViewItem;
     }
 }
