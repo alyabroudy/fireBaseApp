@@ -138,9 +138,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void generateAkwamLink(Artist artist){
+    private void generateAkwamLink(final Artist artist){
 
         Log.i("generate Method", "hello 1");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
         //artist.setUrl("https://akwam.co/movie/2719/sky-sharks");
         //check which page is it
         String page1 = "akwam.co/movie";
@@ -165,15 +169,14 @@ public class MainActivity extends AppCompatActivity {
             Log.i("generate Method", "hello fetch video link");
             fetchAkwamVideoLink(artist);
         }
+            }
+        }).start();
     }
 
     private void fetchAkwamPageOne(final Artist artist){
         Log.i("akwam fetchAkwamPageOne","start");
         final String url = artist.getUrl();
         final StringBuilder builder = new StringBuilder();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
                 try {
                     Document doc = Jsoup.connect(url).get();
                     //Elements links = doc.select("a[href]");
@@ -231,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
                         //       .append("\n").append("Text : ").append(link.text());
                         if (link.attr("href").contains(p2Caption))
                         {
-                            databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
+                            //databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
                             artist.setUrl(link.attr("href"));
                             fetchAkwamPageTwo(artist);
                             break;
@@ -241,71 +244,50 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     builder.append("Error : ").append(e.getMessage()).append("\n");
                 }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                       // textViewResponse.setText(builder.toString());
-                        Log.i("akwam method","artikel in method");
-                        Log.i("name",builder.toString());
-                        Log.i("akwam Url",artist.getUrl());
-                    }
-                });
-
-            }
-        }).start();
         Log.i("akwam fetchAkwamPageOne",artist.getUrl());
         Log.i("akwam fetchAkwamPageOne","end");
     }
 
     private void fetchAkwamPageTwo(final Artist artist){
         Log.i("akwam fetchAkwamPageTwo","start");
+
         final String url = artist.getUrl();
+        Log.i("akwam fetchTwoUrl",url);
         final StringBuilder builder = new StringBuilder();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
                 try {
+                    if (!url.contains("https")){
+                        url.replace("http", "https");
+                    }
                     Document doc = Jsoup.connect(url).get();
                     //Elements links = doc.select("a[href]");
 
                     // page3 links fetch akwam link from goo- page
                     String p3Caption = "akwam.co";
                     Elements links = doc.select("a[href]");
+                    Log.i("akwam p3Links","s"+ links.size());
                     for (Element link : links) {
                         if (link.attr("href").contains(p3Caption))
                         {
                             databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
                             artist.setUrl(link.attr("href"));
+                            Log.i("akwam url3",link.attr("href"));
                             fetchAkwamVideoLink(artist);
                             break;
                         }
                     }
                 } catch (IOException e) {
-                    builder.append("Error : ").append(e.getMessage()).append("\n");
+                    Log.i("akwam url3","fail u3 ");
+                    Log.i("akwam url3",e.getMessage());
+                   // builder.append("Error : ").append(e.getMessage()).append("\n");
                 }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                       // textViewResponse.setText(builder.toString());
-                        Log.i("akwam method","artikel in method");
-                        Log.i("name",builder.toString());
-                        Log.i("akwam Url",artist.getUrl());
-
-                    }
-                });
-
-            }
-        }).start();
         Log.i("akwam fetchAkwamPageTwo","end");
     }
 
     private void fetchAkwamVideoLink(final Artist artist){
-        Log.i("akwam fetchAkwamVideoLink","start");
+        Log.i("akwam fetchlink","start");
         final String url = artist.getUrl();
         final StringBuilder builder = new StringBuilder();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+
                 try {
                     Document doc = Jsoup.connect(url).get();
                     //Elements links = doc.select("a[href]");
@@ -324,20 +306,17 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     builder.append("Error : ").append(e.getMessage()).append("\n");
                 }
-                runOnUiThread(new Runnable() {
+        Log.i("akwam fetchAkwamLink","end");
+                /*
+                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         // textViewResponse.setText(builder.toString());
                         Log.i("akwam method","artikel in method");
-                        Log.i("name",builder.toString());
                         Log.i("akwam Url",artist.getUrl());
-
                     }
                 });
-
-            }
-        }).start();
-        Log.i("akwam fetchAkwamVideoLink","end");
+                 */
     }
 
     /**
