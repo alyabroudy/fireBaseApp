@@ -9,7 +9,7 @@
 
     <EditText
         android:id="@+id/editTextName"
-        android:layout_width="match_parent"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
@@ -19,37 +19,14 @@
         tools:layout_editor_absoluteX="16dp"
         tools:layout_editor_absoluteY="16dp" />
 
-    <EditText
-        android:id="@+id/editTextUrl"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="Enter Url"
-        android:inputType="text"
-        android:layout_below="@id/editTextName"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="16dp" />
-
-    <Spinner
-        android:id="@+id/spinnerGenres"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:entries="@array/genres"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
-        android:layout_below="@id/editTextUrl"
-        tools:layout_editor_absoluteX="1dp"
-        tools:layout_editor_absoluteY="82dp" />
     <Button
-        android:id="@+id/buttonAddArtist"
+        android:id="@+id/buttonSearch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="add Artist"
+        android:text="Search"
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
-        android:layout_below="@id/spinnerGenres"
+        android:layout_toRightOf="@id/editTextName"
         android:layout_centerHorizontal="true"
         tools:layout_editor_absoluteX="170dp"
         tools:layout_editor_absoluteY="139dp" />
@@ -57,7 +34,7 @@
         android:id="@+id/textView_response"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/buttonAddArtist"
+        android:layout_below="@id/buttonSearch"
         />
 
     <ListView

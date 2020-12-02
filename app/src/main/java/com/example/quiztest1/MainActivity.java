@@ -10,16 +10,12 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.MediaController;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 
 import com.google.firebase.database.DataSnapshot;
@@ -28,100 +24,91 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
 public class MainActivity extends AppCompatActivity {
 
-    DatabaseReference databaseArtist;
+   // DatabaseReference databaseArtist;
 
     //list contains retrieved artists
-    List<Artist> artistList;
-
-    OkHttpClient client;
-
-    List<String> responseContent;
+    static List<Artist> artistList;
 
     EditText editTextName;
-    EditText editTextUrl;
-    Button buttonAddArtist;
-    Spinner spinnerGenres;
+    Button buttonSearch;
     ListView listViewArtists;
     TextView textViewResponse;
     ImageView imageView;
-    TextView textViewRate;
+    ArtistList adapter;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        responseContent = new ArrayList<>();
-        databaseArtist = FirebaseDatabase.getInstance().getReference("artists");
+        //databaseArtist = FirebaseDatabase.getInstance().getReference("artists");
 
         editTextName = (EditText) findViewById(R.id.editTextName);
-        editTextUrl = (EditText) findViewById(R.id.editTextUrl);
-        buttonAddArtist = (Button) findViewById(R.id.buttonAddArtist);
-        spinnerGenres = (Spinner) findViewById(R.id.spinnerGenres);
+        buttonSearch = (Button) findViewById(R.id.buttonSearch);
         listViewArtists = (ListView) findViewById(R.id.listViewArtist);
         textViewResponse = (TextView) findViewById(R.id.textView_response);
         imageView = (ImageView) findViewById(R.id.imageView);
-        textViewRate = (TextView) findViewById(R.id.textView_rate);
 
         //initialize artist list
         artistList = new ArrayList<>();
+        adapter = new ArtistList(MainActivity.this, artistList);
 
         listViewArtists.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Artist artist = artistList.get(position);
-               String url = artist.getUrl();
-                String type = "video/*"; // It works for all video application
-                Uri uri = Uri.parse(url);
-                Intent in1 = new Intent(Intent.ACTION_VIEW, uri);
-                in1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-              //  in1.setPackage("org.videolan.vlc");
-                in1.setDataAndType(uri, type);
-                Log.i("video started", uri.toString());
-                startActivity(in1);
+
+                if (isSeriesLink(artist.getUrl()))
+                {
+                    //generateAkwamSeriesLink(artist);
+                    Log.i("Click", "is Series Link");
+                   generateAkwamSeriesLink(artist);
+                }else {
+                    Log.i("Click", "not Series Link");
+                    generateAkwamLink(artist);
+                }
             }
         });
-
         //click listener for the button
-        buttonAddArtist.setOnClickListener(new View.OnClickListener() {
+        buttonSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addArtist();
+                search();
             }
         });
-
     }
 
     @Override
     protected void onStart() {
         super.onStart();
 
+        //artistList.clear();
+        String movies = "https://akwam.co/movies";
+        getLinks(movies, true);
+/*
+        if (!artistList.isEmpty()){
+            //Collections.reverse(artistList);
+            listViewArtists.setAdapter(adapter);
+        }
+/*
         databaseArtist.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 artistList.clear();
-                for (DataSnapshot artistSnapshot: dataSnapshot.getChildren()){
+                for (DataSnapshot artistSnapshot : dataSnapshot.getChildren()) {
                     Artist artist = artistSnapshot.getValue(Artist.class);
                     artistList.add(artist);
                 }
@@ -132,219 +119,314 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(MainActivity.this, "Error:"+error.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "Error:" + error.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
+
+ */
     }
 
+    private boolean isSeriesLink(String url){
+        //TODO: check if movie or series
+        Log.i("isSeries", url+"");
+        return url.contains("akwam.co/series");
+    }
 
-    private void generateAkwamLink(final Artist artist){
+    private void generateAkwamSeriesLink(final Artist artist){
+        Log.i("akwam series links", "start");
+        final String url = artist.getUrl();
+        MainActivity.artistList.clear();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final List<Artist> linksList= new ArrayList<>();
+                    Log.i("akwam series", "try before connect");
+                    Log.i("akwam series url", url+"s");
+                    Document doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+                    Log.i("akwam series", "try after connect");
 
-        Log.i("generate Method", "hello 1");
+                    Elements links = doc.select("a");
+                    for (Element link : links) {
+
+                            if (
+                                   link.attr("href").contains("akwam.co/episode") &&
+                                           link.getElementsByAttribute("src").hasAttr("alt")
+                            ){
+                                Log.i("imageFound", link.attr("href") + "s");
+                                Log.i("imageFound", link.getElementsByAttribute("src").attr("src") + "s");
+                                Log.i("imageFound", link.getElementsByAttribute("src").attr("alt") + "s");
+
+                                Artist a = new Artist("","","","","","");
+                                Log.i("link found", link.attr("href")+"");
+                                a.setName(link.getElementsByAttribute("src").attr("alt"));
+                                a.setUrl(link.attr("href"));
+                                a.setImage(link.getElementsByAttribute("src").attr("src"));
+
+                                MainActivity.artistList.add(a);
+                                Log.i("akwam list size In", MainActivity.artistList.size() + "s");
+                                Log.i("artis in", a.getUrl());
+                            }
+                            // }});
+
+
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // ArtistList adapter = new ArtistList(MainActivity.this, linksList);
+                            //  listViewArtists.setAdapter(adapter);
+                            // MainActivity.artistList.add(a);
+                            //Log.i("artis O", a.getUrl());
+                            Log.i("akwam list size O", MainActivity.artistList.size() + "s");
+                            adapter.notifyDataSetChanged();
+                            //listViewArtists.setAdapter(adapter);
+                        }});
+                } catch (IOException e) {
+                    //builder.append("Error : ").append(e.getMessage()).append("\n");
+                    Log.i("fail", e.getMessage()+"");
+                }
+
+            }
+        }).start();
+        Log.i("akwam getLinks", "end");
+    }
+
+    private void generateAkwamLink(final Artist artist) {
+        Log.i("akwam fetchAkwamPageOne", "start");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String url = artist.getUrl();
+                    Log.i("akwam fetchl1", url);
+                    // page2 links
+                    String p2Caption = "http://goo-2o.com/link/";
+                    Document doc = Jsoup.connect(url).get();
+                    Elements links = doc.select("a[href]");
+                    for (Element link : links) {
+                        //  builder.append("\n").append("Link : ").append(link.attr("href"))
+                        // builder.append("\n").append("Link : ")
+                        //       .append("\n").append("Text : ").append(link.text());
+                        if (link.attr("href").contains(p2Caption)) {
+                            //databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
+                            artist.setUrl(link.attr("href"));
+                            url = link.attr("href");
+                            break;
+                        }
+                    }
+
+                    Log.i("akwam fetchl2", url);
+                    doc = Jsoup.connect(url).get();
+                    Elements links2 = doc.select("a[href]");
+
+                    // page3 links fetch akwam link from goo- page
+                    String p3Caption = "akwam.co";
+                    Log.i("akwam p3Links", "s" + links.size());
+                    for (Element link : links2) {
+                        if (link.attr("href").contains(p3Caption)) {
+                            //  databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
+                            artist.setUrl(link.attr("href"));
+                            Log.i("akwam url3", link.attr("href"));
+                            url = link.attr("href");
+                            break;
+                        }
+                    }
+                    Log.i("akwam fetchl3", url);
+                    doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+                    //page 3 links download page
+                    String videoCaption = "akwam.download";
+                    Elements links3 = doc.select("a[href]");
+                    for (Element link : links3) {
+                        if (link.attr("href").contains(videoCaption)) {
+                            //TODO: later not to save the video link permanently
+                            // databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
+                            artist.setUrl(link.attr("href"));
+                            url = link.attr("href");
+                            break;
+                        }
+                    }
+                   // runOnUiThread(new Runnable() {
+                     //   @Override
+                       // public void run() {
+                            // textViewResponse.setText(builder.toString());
+                    Log.i("akwam fetchl4", url);
+                            String type = "video/*"; // It works for all video application
+                            Uri uri = Uri.parse(url);
+                            Intent in1 = new Intent(Intent.ACTION_VIEW, uri);
+                            in1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            //  in1.setPackage("org.videolan.vlc");
+                            in1.setDataAndType(uri, type);
+                            Log.i("video started", uri.toString());
+                            startActivity(in1);
+                            Log.i("akwam method", "artikel in method");
+                            Log.i("akwam Url", artist.getUrl());
+                  //      }
+                //    });
+                } catch (IOException e) {
+                    Log.i("akwam Error", e.getMessage().toString());
+                }
+            }
+            }).start();
+        Log.i("akwam getLinks", "end");
+        Log.i("akwam fetchAkwamPageOne", artist.getUrl());
+        Log.i("akwam fetchAkwamPageOne", "end");
+    }
+
+    /**
+     * search artikle in akwam
+     */
+    private void search() {
+        String name = editTextName.getText().toString();
+
+        if (!TextUtils.isEmpty(name)){
+            MainActivity.artistList.clear();
+            getLinks(name, false);
+        }
+            Toast.makeText(this, " Searching for " + name , Toast.LENGTH_LONG).show();
+    }
+
+    private List<Artist> getLinks(String query, boolean isSeries) {
+        Log.i("akwam getLinks", "start");
+
+        if (!isSeries){
+            query = "https://akwam.co/search?q=" + query + "&section=0&year=0&rating=0&formats=0&quality=0";
+        }
+        final String url = query;
+       final List<Artist> linksList = new ArrayList<>();
+        new Thread(new Runnable() {
+        @Override
+        public void run() {
+
+        final StringBuilder builder = new StringBuilder();
+        try {
+            Log.i("akwam getLinks", "try before connect");
+            Log.i("akwam links url", url+"s");
+            Document doc = Jsoup.connect(url).get();
+            //Elements links = doc.select("a[href]");
+            Log.i("akwam getLinks", "try after connect");
+
+           /* final Artist a = new Artist(
+                    "1", "", "comedy",
+                    "",
+                    "", "01");
+*/
+            Elements links = doc.select("a");
+            for (Element link : links) {
+                if (link.hasClass("box"))
+                {
+
+                    Log.i("imageFound", link.attr("href") + "s");
+                    Log.i("imageFound", link.getElementsByAttribute("src").attr("data-src") + "s");
+                    Log.i("imageFound", link.getElementsByAttribute("src").attr("alt") + "s");
+
+
+                    if (
+                            link.attr("href").contains("akwam.co/movie") ||
+                            link.attr("href").contains("akwam.co/series") ||
+                            link.attr("href").contains("akwam.co/episode")
+                    ){
+                        Artist a = new Artist("","","","","","");
+                        Log.i("link found", link.attr("href")+"");
+                        a.setName(link.getElementsByAttribute("src").attr("alt"));
+                        a.setUrl(link.attr("href"));
+                        a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+
+                        MainActivity.artistList.add(a);
+                        Log.i("akwam list size In", MainActivity.artistList.size() + "s");
+                        Log.i("artis in", a.getUrl());
+                    }
+                       // }});
+
+                }
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                   // ArtistList adapter = new ArtistList(MainActivity.this, linksList);
+                     //  listViewArtists.setAdapter(adapter);
+                   // MainActivity.artistList.add(a);
+                    //Log.i("artis O", a.getUrl());
+                    Log.i("akwam list size O", MainActivity.artistList.size() + "s");
+                    listViewArtists.setAdapter(adapter);
+                }});
+        } catch (IOException e) {
+            //builder.append("Error : ").append(e.getMessage()).append("\n");
+            Log.i("fail", e.getMessage()+"");
+        }
+
+}
+        }).start();
+        Log.i("akwam getLinks", "end");
+        return linksList;
+    }
+
+    private List<Artist> getOldAkoamLinks(String query, boolean isSeries) {
+        Log.i("akwam getLinks", "start");
+
+        if (!isSeries){
+            query = "https://old.akwam.co/search/" + query;
+        }
+        final String url = query;
+        final List<Artist> linksList = new ArrayList<>();
         new Thread(new Runnable() {
             @Override
             public void run() {
 
-        //artist.setUrl("https://akwam.co/movie/2719/sky-sharks");
-        //check which page is it
-        String page1 = "akwam.co/movie";
-        String page1Part2 = "akwam.co/episode";
-        String page1Part3 = "akwam.co/show";
+                final StringBuilder builder = new StringBuilder();
+                try {
+                    Log.i("akwam getLinks", "try before connect");
+                    Log.i("akwam links url", url+"s");
+                    Document doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+                    Log.i("akwam getLinks", "try after connect");
 
-        String page2 = "goo-";
-        String page3 = "akwam.co/download";
+           /* final Artist a = new Artist(
+                    "1", "", "comedy",
+                    "",
+                    "", "01");
+*/
+                    Elements divs = doc.select("div");
+                    for (Element div : divs) {
+                        if (div.hasClass("tag_box"))
+                        {
+                            Artist a = new Artist("","","","","","");
 
-        if (artist.getUrl().contains(page1) || artist.getUrl().contains(page1Part2) || artist.getUrl().contains(page1Part3))
-        {
-            Log.i("generate Method", "hello page one");
-            //get Second page url
-            fetchAkwamPageOne(artist);
-            Log.i("generate name", artist.getName());
-        }else if(artist.getUrl().contains(page2) )
-        {
-            fetchAkwamPageTwo(artist);
-            Log.i("generate Method", "hello page two");
-        }else if(artist.getUrl().contains(page3) )
-        {
-            Log.i("generate Method", "hello fetch video link");
-            fetchAkwamVideoLink(artist);
-        }
+
+
+                                a.setName(div.getElementsByTag("h1").text());
+                                a.setUrl(div.getElementsByTag("a").attr("href"));
+                               // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+
+                                MainActivity.artistList.add(a);
+                                Log.i("akwam list size In", MainActivity.artistList.size() + "s");
+                                Log.i("artis in", a.getUrl());
+
+                            // }});
+
+                        }
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // ArtistList adapter = new ArtistList(MainActivity.this, linksList);
+                            //  listViewArtists.setAdapter(adapter);
+                            // MainActivity.artistList.add(a);
+                            //Log.i("artis O", a.getUrl());
+                            Log.i("akwam list size O", MainActivity.artistList.size() + "s");
+                            adapter.notifyDataSetChanged();
+                            //listViewArtists.setAdapter(adapter);
+                        }});
+                } catch (IOException e) {
+                    //builder.append("Error : ").append(e.getMessage()).append("\n");
+                    Log.i("fail", e.getMessage()+"");
+                }
+
             }
         }).start();
+        Log.i("akwam getLinks", "end");
+        return linksList;
     }
-
-    private void fetchAkwamPageOne(final Artist artist){
-        Log.i("akwam fetchAkwamPageOne","start");
-        final String url = artist.getUrl();
-        final StringBuilder builder = new StringBuilder();
-                try {
-                    Document doc = Jsoup.connect(url).get();
-                    //Elements links = doc.select("a[href]");
-                    Elements names = doc.select("h1");
-                    //get movie name
-                    for (Element name : names) {
-                      //  builder.append("\n").append("Link : ").append(link.attr("href"))
-                       // builder.append("\n").append("Link : ")
-                         //       .append("\n").append("Text : ").append(link.text());
-                        builder.append(name.text());
-                        break;
-                    }
-
-                    databaseArtist.child(artist.getId()).child("name").setValue(builder.toString());
-
-                    //page1 image
-                    String imageCaption = "https://img.akwam.co/thumb/260x380/";
-                    Elements images = doc.select("img[src]");
-                    for (Element image : images) {
-                        //  builder.append("\n").append("Link : ").append(link.attr("href"))
-                        // builder.append("\n").append("Link : ")
-                        //       .append("\n").append("Text : ").append(link.text());
-                        if (image.attr("src").contains(imageCaption))
-                        {
-                            databaseArtist.child(artist.getId()).child("image").setValue(image.attr("src"));
-                            artist.setImage(image.attr("src").toString());
-                            Log.i("image found", image.attr("src").toString());
-                            break;
-                        }
-                    }
-
-                    //page1 rate
-                    String rateCaption = "mx-2";
-                    Elements spans = doc.select("span");
-                    for (Element span : spans) {
-                        //  builder.append("\n").append("Link : ").append(link.attr("href"))
-                        // builder.append("\n").append("Link : ")
-                        //       .append("\n").append("Text : ").append(link.text());
-                        if (span.hasClass(rateCaption))
-                        {
-                            databaseArtist.child(artist.getId()).child("rate").setValue(span.text());
-                            artist.setRate(span.text());
-                            Log.i("rate found", span.text());
-                            break;
-                        }
-                    }
-
-
-                    // page2 links
-                    String p2Caption = "http://goo-2o.com/link/";
-                    Elements links = doc.select("a[href]");
-                    for (Element link : links) {
-                        //  builder.append("\n").append("Link : ").append(link.attr("href"))
-                        // builder.append("\n").append("Link : ")
-                        //       .append("\n").append("Text : ").append(link.text());
-                        if (link.attr("href").contains(p2Caption))
-                        {
-                            //databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
-                            artist.setUrl(link.attr("href"));
-                            fetchAkwamPageTwo(artist);
-                            break;
-                        }
-                    }
-
-                } catch (IOException e) {
-                    builder.append("Error : ").append(e.getMessage()).append("\n");
-                }
-        Log.i("akwam fetchAkwamPageOne",artist.getUrl());
-        Log.i("akwam fetchAkwamPageOne","end");
-    }
-
-    private void fetchAkwamPageTwo(final Artist artist){
-        Log.i("akwam fetchAkwamPageTwo","start");
-
-        final String url = artist.getUrl();
-        Log.i("akwam fetchTwoUrl",url);
-        final StringBuilder builder = new StringBuilder();
-                try {
-                    if (!url.contains("https")){
-                        url.replace("http", "https");
-                    }
-                    Document doc = Jsoup.connect(url).get();
-                    //Elements links = doc.select("a[href]");
-
-                    // page3 links fetch akwam link from goo- page
-                    String p3Caption = "akwam.co";
-                    Elements links = doc.select("a[href]");
-                    Log.i("akwam p3Links","s"+ links.size());
-                    for (Element link : links) {
-                        if (link.attr("href").contains(p3Caption))
-                        {
-                            databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
-                            artist.setUrl(link.attr("href"));
-                            Log.i("akwam url3",link.attr("href"));
-                            fetchAkwamVideoLink(artist);
-                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    Log.i("akwam url3","fail u3 ");
-                    Log.i("akwam url3",e.getMessage());
-                   // builder.append("Error : ").append(e.getMessage()).append("\n");
-                }
-        Log.i("akwam fetchAkwamPageTwo","end");
-    }
-
-    private void fetchAkwamVideoLink(final Artist artist){
-        Log.i("akwam fetchlink","start");
-        final String url = artist.getUrl();
-        final StringBuilder builder = new StringBuilder();
-
-                try {
-                    Document doc = Jsoup.connect(url).get();
-                    //Elements links = doc.select("a[href]");
-                    //page 3 links download page
-                    String p3Caption = "akwam.download";
-                    Elements links = doc.select("a[href]");
-                    for (Element link : links) {
-                        if (link.attr("href").contains(p3Caption))
-                        {
-                            //TODO: later not to save the video link permanently
-                            databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
-                            artist.setUrl(link.attr("href"));
-                            break;
-                        }
-                    }
-                } catch (IOException e) {
-                    builder.append("Error : ").append(e.getMessage()).append("\n");
-                }
-        Log.i("akwam fetchAkwamLink","end");
-                /*
-                 runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // textViewResponse.setText(builder.toString());
-                        Log.i("akwam method","artikel in method");
-                        Log.i("akwam Url",artist.getUrl());
-                    }
-                });
-                 */
-    }
-
-    /**
-     * add Artist to database
-     */
-    private void addArtist(){
-        String name = editTextName.getText().toString();
-        String url = editTextUrl.getText().toString();
-        String genre = spinnerGenres.getSelectedItem().toString();
-
-        if (!TextUtils.isEmpty(name)){
-
-            //to generate a unique id in the database
-            String id = databaseArtist.push().getKey();
-
-            //name = generateAkwamLink(name);
-            //create an Artist
-            Artist artist = new Artist(id, name, genre, url, "", "");
-
-            databaseArtist.child(id).setValue(artist);
-           // if (artist.getGenre().equals("Akwam")){
-                generateAkwamLink(artist);
-                Log.i("akwam method","artikel after method");
-           // }
-            Toast.makeText(this, " Artist "+name+" added!", Toast.LENGTH_LONG).show();
-        }else {
-            Toast.makeText(this,"You need to enter a name", Toast.LENGTH_LONG).show();
-        }
-    }
-
 }
