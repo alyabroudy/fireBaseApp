@@ -180,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
                             // MainActivity.artistList.add(a);
                             //Log.i("artis O", a.getUrl());
                             Log.i("akwam list size O", MainActivity.artistList.size() + "s");
+                            Collections.reverse(MainActivity.artistList);
                             adapter.notifyDataSetChanged();
                             //listViewArtists.setAdapter(adapter);
                         }});
@@ -211,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
                         //       .append("\n").append("Text : ").append(link.text());
                         if (link.attr("href").contains(p2Caption)) {
                             //databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
-                            artist.setUrl(link.attr("href"));
+                            //artist.setUrl(link.attr("href"));
                             url = link.attr("href");
                             break;
                         }
@@ -227,7 +228,7 @@ public class MainActivity extends AppCompatActivity {
                     for (Element link : links2) {
                         if (link.attr("href").contains(p3Caption)) {
                             //  databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
-                            artist.setUrl(link.attr("href"));
+                            //artist.setUrl(link.attr("href"));
                             Log.i("akwam url3", link.attr("href"));
                             url = link.attr("href");
                             break;
@@ -243,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
                         if (link.attr("href").contains(videoCaption)) {
                             //TODO: later not to save the video link permanently
                             // databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
-                            artist.setUrl(link.attr("href"));
+                            //artist.setUrl(link.attr("href"));
                             url = link.attr("href");
                             break;
                         }
@@ -288,8 +289,9 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, " Searching for " + name , Toast.LENGTH_LONG).show();
     }
 
-    private List<Artist> getLinks(String query, boolean isSeries) {
+    private List<Artist> getLinks(String query, final boolean isSeries) {
         Log.i("akwam getLinks", "start");
+        final String oldAkwamQuery = query;
 
         if (!isSeries){
             query = "https://akwam.co/search?q=" + query + "&section=0&year=0&rating=0&formats=0&quality=0";
@@ -350,6 +352,11 @@ public class MainActivity extends AppCompatActivity {
                    // MainActivity.artistList.add(a);
                     //Log.i("artis O", a.getUrl());
                     Log.i("akwam list size O", MainActivity.artistList.size() + "s");
+                  /*  if (!isSeries){
+                        getOldAkoamLinks(oldAkwamQuery, false);
+                        adapter.notifyDataSetChanged();
+                    }*/
+
                     listViewArtists.setAdapter(adapter);
                 }});
         } catch (IOException e) {
@@ -363,25 +370,22 @@ public class MainActivity extends AppCompatActivity {
         return linksList;
     }
 
-    private List<Artist> getOldAkoamLinks(String query, boolean isSeries) {
+    private void getOldAkoamLinks(String query, boolean isSeries) {
         Log.i("akwam getLinks", "start");
 
         if (!isSeries){
             query = "https://old.akwam.co/search/" + query;
         }
         final String url = query;
-        final List<Artist> linksList = new ArrayList<>();
         new Thread(new Runnable() {
             @Override
             public void run() {
-
-                final StringBuilder builder = new StringBuilder();
                 try {
-                    Log.i("akwam getLinks", "try before connect");
-                    Log.i("akwam links url", url+"s");
+                    Log.i("old akwam getLinks", "try before connect");
+                    Log.i("old akwam links url", url+"s");
                     Document doc = Jsoup.connect(url).get();
                     //Elements links = doc.select("a[href]");
-                    Log.i("akwam getLinks", "try after connect");
+                    Log.i("old akwam getLinks", "try after connect");
 
            /* final Artist a = new Artist(
                     "1", "", "comedy",
@@ -390,14 +394,19 @@ public class MainActivity extends AppCompatActivity {
 */
                     Elements divs = doc.select("div");
                     for (Element div : divs) {
-                        if (div.hasClass("tag_box"))
+                        Log.i("old akwam div", "found div no class");
+                        if (div.hasClass("tags_box"))
                         {
+                            Log.i("old akwam div", "found div with class");
                             Artist a = new Artist("","","","","","");
 
-
-
                                 a.setName(div.getElementsByTag("h1").text());
+                                Log.i("old name", div.getElementsByTag("h1").text().toString() + "");
                                 a.setUrl(div.getElementsByTag("a").attr("href"));
+                                Log.i("old link nn ", div.getElementsByTag("a").attr("href")+"");
+                                Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
+                                Log.i("old link nn ", div.getElementsByTag("a").attr("href")+"");
+                                Log.i("old link nn ", div.getElementsByTag("a").attr("href")+"");
                                // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
 
                                 MainActivity.artistList.add(a);
@@ -415,8 +424,8 @@ public class MainActivity extends AppCompatActivity {
                             //  listViewArtists.setAdapter(adapter);
                             // MainActivity.artistList.add(a);
                             //Log.i("artis O", a.getUrl());
-                            Log.i("akwam list size O", MainActivity.artistList.size() + "s");
-                            adapter.notifyDataSetChanged();
+                            Log.i("old akwam list size O", MainActivity.artistList.size() + "s");
+                            //adapter.notifyDataSetChanged();
                             //listViewArtists.setAdapter(adapter);
                         }});
                 } catch (IOException e) {
@@ -427,6 +436,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }).start();
         Log.i("akwam getLinks", "end");
-        return linksList;
     }
 }
