@@ -60,4 +60,7 @@ public class ArtistList extends ArrayAdapter<Artist> {
     public void setArtistList(List<Artist> list){
         this.artistList = list;
     }
+    public List<Artist> getArtistList(){
+        return this.artistList;
+    }
 }
