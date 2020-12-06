@@ -115,6 +115,14 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 }else {
+                    Log.i(TAG, "OnCreate. is shaihd");
+
+                        if (isSeriesLinkShahid(artist)){
+                            generateShahid4uSeriesLink(artist);
+                        }else {
+                            generateShahid4uLink(artist);
+                        }
+
                 }
             }
         });
@@ -197,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
     /////////////////////////////////////////////////////////////////
     ///////////////   Akwam.co    //////////////////////////////////
 
-    public void searchAkwam(String query, boolean isSeries){
+    public void searchAkwam(String query, final boolean isSeries){
         Log.i(TAG_AKWAM, "Search Start");
         final String oldAkwamQuery = query;
 
@@ -253,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG_AKWAM, "Search End");
     }
 
-    public void fetchLinkVideoAkwam(Artist artist) {
+    public void fetchLinkVideoAkwam(final Artist artist) {
         Log.i(TAG_AKWAM, "FetchVedio Start");
         new Thread(new Runnable() {
             @Override
@@ -323,11 +331,18 @@ public class MainActivity extends AppCompatActivity {
         return artist.getUrl().contains("akwam.co/series") || artist.getUrl().contains("akwam.co/movies") ;
     }
 
+    private boolean isSeriesLinkShahid(Artist artist){
+        Log.i(TAG_AKWAM, "IsSerise Start");
+
+        Log.i(TAG_AKWAM, "IsSerise End URL ="+artist.getUrl());
+        return artist.getUrl().contains("shahid4u.one/series") || artist.getUrl().contains("shahid4u.one/season") ;
+    }
+
     /**
      * fetch resolution links from a film link
      * @param artist
      */
-    private void fetchOneLinkAkwam(Artist artist){
+    private void fetchOneLinkAkwam(final Artist artist){
        // MainActivity.resolutionsList.clear();
         MainActivity.artistList.clear();
         new Thread(new Runnable() {
@@ -752,7 +767,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void generatAkwamLinkRessulotions(Artist artist) {
+    private void generatAkwamLinkRessulotions(final Artist artist) {
         MainActivity.artistList.clear();
         new Thread(new Runnable() {
             @Override
