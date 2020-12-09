@@ -4,6 +4,7 @@ public class Artist {
     private String id;
     private String name;
     private String url;
+    private String oldUrl;
     private String genre;
     private String image;
     private String rate;
@@ -36,6 +37,14 @@ public class Artist {
     public void setUrl(String url) {
         this.url = url;
     }
+    public String getOldUrl() {
+        return oldUrl;
+    }
+
+    public void setOldUrl(String oldUrl) {
+        this.oldUrl = oldUrl;
+    }
+
 
     public String getId() {
         return id;

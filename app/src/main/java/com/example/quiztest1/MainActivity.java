@@ -1,15 +1,15 @@
 package com.example.quiztest1;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.webkit.WebChromeClient;
+import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -19,36 +19,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -58,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
     static List<Artist> artistList;
     static List<Artist> resultList;
     static List<Artist> resolutionsList;
+
+    static String oldAkwamGooLink="";
+    static String oldAkwamVideoLink="";
 
     //variable for back button confirmation
     private long backPressedTime;
@@ -74,6 +56,11 @@ public class MainActivity extends AppCompatActivity {
     ArtistList adapterResult;
     ArtistList adapterResolution;
 
+    WebView simpleWebView;
+    WebView simpleWebView2;
+    static List<String> serverList;
+    static int serverCounts;
+
 
 
     @Override
@@ -82,11 +69,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         //databaseArtist = FirebaseDatabase.getInstance().getReference("artists");
         //initialise server Controllers
+        serverList = new ArrayList<>();
+        serverCounts = 4;
+        //simpleWebView = (WebView) findViewById(R.id.webView);
+        //simpleWebView2 = (WebView) findViewById(R.id.webView2);
+      //  simpleWebView.getSettings().setJavaScriptEnabled(true);
+        //simpleWebView.addJavascriptInterface(new WebAppInterface(this), "Android");
+
 
         editTextName = (EditText) findViewById(R.id.editTextName);
         buttonSearch = (Button) findViewById(R.id.buttonSearch);
         listViewArtists = (ListView) findViewById(R.id.listViewArtist);
-        textViewResponse = (TextView) findViewById(R.id.textView_response);
+       // textViewResponse = (TextView) findViewById(R.id.textView_response);
         imageView = (ImageView) findViewById(R.id.imageView);
 
         //initialize artist list
@@ -97,34 +91,108 @@ public class MainActivity extends AppCompatActivity {
         adapterResult = new ArtistList(MainActivity.this, resultList);
         adapterResolution = new ArtistList(MainActivity.this, resolutionsList);
 
+
+        String movies = "https://akwam.co/movies";
+        searchAkwam(movies, true);
+
+
+
         listViewArtists.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Artist artist = artistList.get(position);
               //  artist.setUrl("https://old.goo-2o.com/5dd7c58d8da14");
-                if (artist.getServer().equals(Artist.SERVER_AKWAM))
-                {
+            //    if (artist.getServer().equals(Artist.SERVER_AKWAM))
+              //  {
                     Log.i(TAG, "OnCreate. is Akwam");
-                    if (artist.getIsVideo()){
-                        fetchLinkVideoAkwam(artist);
-                    }else {
-                        if (isSeriesLinkAkwam(artist)){
-                            fetchSeriesLinkAkwam(artist);
+
+                  //  if (artist.getIsVideo()){
+                   //     fetchLinkVideoAkwam(artist);
+                   // }else {
+                        if (isSeriesLinkAkwam(artist) || isSeriesLinkShahid(artist)){
+                            Intent seriesLinkIntent = new Intent(MainActivity.this, LinkSeriesActivity.class);
+                            seriesLinkIntent.putExtra("ARTIST_URL", artist.getUrl());
+                            seriesLinkIntent.putExtra("ARTIST_NAME", artist.getName());
+                            seriesLinkIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                            seriesLinkIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                            seriesLinkIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+                            //start the activity
+                            startActivity(seriesLinkIntent);
+
+                            //fetchSeriesLinkAkwam(artist);
                         }else {
-                            fetchOneLinkAkwam(artist);
+                            Intent serverListIntent = new Intent(MainActivity.this, ServersListActivity.class);
+                            serverListIntent.putExtra("ARTIST_URL", artist.getUrl());
+                            serverListIntent.putExtra("ARTIST_NAME", artist.getName());
+                            serverListIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                            serverListIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                            serverListIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+                            //start the activity
+                            startActivity(serverListIntent);
+                           // fetchOneLinkAkwam(artist);
+                        }
+                  //  }
+
+                /*
+
+/*
+
+
+
+                }else {
+                    Log.i(TAG, "OnCreate. is shaihd");
+                        Intent shahidLinkIntent = new Intent(MainActivity.this, LinkSeriesActivity.class);
+                    shahidLinkIntent.putExtra("ARTIST_URL", artist.getUrl());
+                    shahidLinkIntent.putExtra("ARTIST_NAME", artist.getName());
+                    shahidLinkIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                        //start the activity
+                        startActivity(shahidLinkIntent);
+                    /*
+                    if (artist.getIsVideo()){
+                        generateShahid4uLink(artist);
+                    }else {
+                        if (isSeriesLinkShahid(artist)) {
+                            generateShahid4uSeriesLink(artist);
+                        } else {
+                            getServersShahid4u(artist);
                         }
                     }
-                }else {
+
+
                 }
+
+                 */
             }
         });
         //click listener for the button
         buttonSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                search();
+                String query = editTextName.getText().toString();
+                Intent searchIntent = new Intent(MainActivity.this, SearchActivity.class);
+                searchIntent.putExtra("QUERY", query);
+                //start the activity
+                startActivity(searchIntent);
+
+             /*   search();
+                Artist artist = new Artist();
+                artist.setUrl("http://old.goo-2o.com/5dd7c58d8da14");
+               // artist.setUrl(getOldAkwamGooPage(artist));
+                getOldAkwamVideoLink("https://old.akwam.co/download/3c472024a3f1/High-Seas-S02-Ep01-720p-WEB-DL-akoam-net-mkv");
+                Log.i("artist goo", artist.getUrl()+"");
+              //  artist.setUrl(getOldAkwamVideoLink(artist));
+                //Log.i("artist video", artist.getUrl()+"");
+
+              */
             }
         });
+    }
+
+    public void start(){
+        if (MainActivity.artistList.isEmpty()){
+            String movies = "https://akwam.co/movies";
+            searchAkwam(movies, true);
+        }
     }
 
     //confirmation if the user click the back button to exit the app
@@ -153,13 +221,22 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
+        start();
+
+        /*
         //artistList.clear();
         if (artistList.isEmpty()){
-            String movies = "https://akwam.co/movies";
-            searchAkwam(movies, true);
-        }
-        //Artist artist = new Artist();
-        //artist.setUrl("https://akwam.co/movies");
+
+          /*  String movies = "https://old.akwam.co/download/3c472024a3f1/High-Seas-S02-Ep01-720p-WEB-DL-akoam-net-mkv";
+            Artist artist = new Artist();
+            artist.setUrl(movies);
+            generateOldAkwamLink(artist);
+
+           */
+      //  }
+
+
+
         //artist.setServer(Artist.SERVER_AKWAM);
         //akwamController.fetchLink(artist, MainActivity.artistList);
         //adapter.notifyDataSetChanged();
@@ -192,6 +269,19 @@ public class MainActivity extends AppCompatActivity {
         });
 
  */
+    }
+
+    /**
+     * search artikle in akwam
+     */
+    private void search() {
+        String name = editTextName.getText().toString();
+
+        if (!TextUtils.isEmpty(name)){
+           // MainActivity.artistList.clear();
+           // searchAkwam(name, false);
+        }
+        Toast.makeText(this, " Searching for " + name , Toast.LENGTH_LONG).show();
     }
 
     /////////////////////////////////////////////////////////////////
@@ -428,9 +518,402 @@ public class MainActivity extends AppCompatActivity {
 
     //////////////////////////////////////////////////////////////
 
+    /////////////////////////////////////////////////////////////////
+    ///////////////   Old.Akwam.co   //////////////////////////////////
+
+
+    public String getOldAkwamGooPage(Artist artist){
+        WebViewClient webViewClient1= new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                // view.loadUrl(url);
+                Log.d("WEBCLIENT", "OnreDirect url:"+url);
+                view.loadUrl("");
+                simpleWebView.removeAllViews();
+                getOldAkwamVideoLink(url);
+                return false;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                Log.d("WEBCLIENT", "onPageFinished");
+                //ok  sh       view.loadUrl("javascript:location.replace(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
+                //ok akwam   view.loadUrl("javascript:location.replace(document.getElementsByClassName(\"download_button\")[0].getAttribute(\"href\").toString());");
+                view.loadUrl("javascript:location.replace(document.getElementsByClassName('unauth_capsule clearfix')[0].getElementsByTagName('a')[0].getAttribute('ng-href'));");
+            }
+
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                super.onLoadResource(view, url);
+                //ok sh        view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+MainActivity.serverCounts+"].click()");
+                view.loadUrl("javascript:window.document.getElementsByClassName('unauth_capsule clearfix')[0].getElementsByTagName('a')[0].click()");
+                Log.d("WEBCLIENT","onLoadResource");
+            }
+        };
+
+        //old akwam fetch download page from goo-
+        simpleWebView.setWebViewClient(webViewClient1);
+
+       // String url = "http://old.goo-2o.com/5dd7c58d8da14";
+        simpleWebView.loadUrl(artist.getUrl());
+        return MainActivity.oldAkwamGooLink;
+    }
+
+    public String getOldAkwamVideoLink(String url){
+        Log.i("akwam video", url);
+        WebViewClient webViewClient2 = new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                // view.loadUrl(url);
+                //MainActivity.oldAkwamVideoLink = url;
+                Log.d("WEBCLIENT 22", "OnreDirect url:"+url);
+                view.loadUrl("");
+                return false;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                Log.d("WEBCLIENT 22", "onPageFinished");
+                //ok  sh       view.loadUrl("javascript:location.replace(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
+                view.loadUrl("javascript:location.replace(document.getElementsByClassName(\"download_button\")[0].getAttribute(\"href\").toString());");
+            }
+
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                super.onLoadResource(view, url);
+                //ok sh        view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+MainActivity.serverCounts+"].click()");
+                view.loadUrl("javascript:window.document.getElementsByClassName(\"download_button\")[0].click()");
+                Log.d("WEBCLIENT 22","onLoadResource");
+            }
+        };
+        //fetch video link from last page
+        simpleWebView.setWebViewClient(webViewClient2);
+       // String url2 = "https://old.akwam.co/download/3c472024a3f1/High-Seas-S02-Ep01-720p-WEB-DL-akoam-net-mkv";
+        simpleWebView.loadUrl(url);
+        return MainActivity.oldAkwamVideoLink;
+    }
+
+    //////////////////////////////////////////////////////////////
+
+    /////////////////////////////////////////////////////////////////
+    ///////////////   shahid4u.one    //////////////////////////////////
+    private boolean isSeriesLinkShahid(Artist artist){
+        Log.i(TAG_AKWAM, "IsSerise Start");
+
+        Log.i(TAG_AKWAM, "IsSerise End URL ="+artist.getUrl());
+        return artist.getUrl().contains("shahid4u.one/series") || artist.getUrl().contains("shahid4u.one/season") ;
+    }
+
+    private void generateShahid4uSeriesLink(final Artist artist){
+        Log.i("akwam series links", "start");
+        final String url = artist.getUrl();
+        MainActivity.artistList.clear();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Log.i("old akwam getLinks", "try before connect");
+
+                    Log.i("old akwam links url", url+"s");
+                    Document doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+                    Log.i("old akwam getLinks", "try after connect");
+
+                    Elements divs = doc.select("div[class]");
+                    for (Element div : divs) {
+                        Log.i("old akwam div", "found div no class");
+                        if (div.hasClass("content-box"))
+                        {
+                            Log.i("old akwam div", "found div with class");
+                            Artist a = new Artist();
+                            a.setServer(Artist.SERVER_SHAHID4U);
+
+                            a.setName(div.getElementsByTag("h3").text());
+                            Log.i("old name", div.getElementsByTag("h3").text().toString() + "");
+
+                            a.setUrl(div.getElementsByClass("image").attr("href"));
+                            a.setImage(div.getElementsByClass("image").attr("data-src"));
+                            //Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
+
+                            // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+
+                            MainActivity.artistList.add(a);
+                            Log.i("akwam list size In", MainActivity.artistList.size() + "s");
+                            Log.i("artis in", a.getUrl());
+
+                            // }});
+
+                        }
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // ArtistList adapter = new ArtistList(MainActivity.this, linksList);
+                            //  listViewArtists.setAdapter(adapter);
+                            // MainActivity.artistList.add(a);
+                            //Log.i("artis O", a.getUrl());
+                            Log.i("akwam list size O", MainActivity.artistList.size() + "s");
+                            Collections.reverse(MainActivity.artistList);
+                            adapter.notifyDataSetChanged();
+                            //listViewArtists.setAdapter(adapter);
+                        }});
+                } catch (IOException e) {
+                    //builder.append("Error : ").append(e.getMessage()).append("\n");
+                    Log.i("fail", e.getMessage()+"");
+                }
+
+            }
+        }).start();
+        Log.i("akwam getLinks", "end");
+    }
+
+    private void generateShahid4uLink( Artist artist) {
+Log.i("video", artist.getUrl()+"");
+        simpleWebView.setWebViewClient(new WebViewClient() {
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+
+                Log.i("Redirect", url);
+                artist.setUrl(url);
+                //view.destroy();
+                generateShahid4uLink(artist);
+                //view.loadUrl(url);
+                return false;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                Log.d("WEBCLIENT", "onPageFinished");
+                view.loadUrl("javascript:location.replace(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
+                // view.loadUrl("javascript:window.Android.showToast('hi sexy')");
+                //view.loadUrl("javascript:window.document.getElementsByTagName(\"li\")[23].click()");
+                //view.loadUrl("javascript:document.getElementsByTagName(\"iframe\")[0].click();");
+                // view.loadUrl("javascript:window.Android.showToast(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
+                //ok      view.loadUrl("javascript:document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString();");
+                //view.loadUrl("javascript:window.alert(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
+                //  Log.i("yesss", view.getTitle()+"");
+
+            }
+
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                super.onLoadResource(view, url);
+                Log.d("WEBCLIENT","onLoadResource");
+                //  for (int i = 0; i< MainActivity.serverCounts; i++){
+                view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+2+"].click()");
+                Log.i("script", MainActivity.serverCounts+"");
+                //view.loadUrl("javascript:window.Android.showToast(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
+                // view.loadUrl("javascript:location.replace(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
+                //  }
+
+                // view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children[1].click()");
+            }
+        });
+
+        if (artist.getUrl().contains("openload") || artist.getUrl().contains("estream")){
+            Log.i("video", "is open");
+            simpleWebView.loadUrl(artist.getOldUrl());
+        }else {
+
+
+            Log.i("shahid gen link", "start");
+            String ss = artist.getUrl().trim().replace(" ", "");
+            Log.i("result sss", ss + "");
+            // runOnUiThread(new Runnable() {
+            //   @Override
+            // public void run() {
+            // textViewResponse.setText(builder.toString());
+            //url=url.concat(".html");
+            Log.i("akwam fetchl4", ss + "");
+            //  String type = "video/*"; // It works for all video application
+            String type = "text/html"; // It works for all video application
+            Uri uri = Uri.parse(ss);
+            Intent in1 = new Intent(Intent.ACTION_VIEW, uri);
+            in1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            //  in1.setPackage("org.videolan.vlc");
+            in1.setDataAndType(uri, type);
+            Log.i("video started", uri.toString() + "");
+            startActivity(in1);
+            Log.i("akwam method", "artikel in method");
+            Log.i("akwam Url", artist.getUrl() + "");
+            //      }
+            //    });
+        }
+    }
+
+    private void getShahid4uLinks(String query, boolean isSeries) {
+        Log.i("akwam getLinks", "start");
+
+        if (!isSeries) {
+            query = "https://shahid4u.one/search?s=" + query;
+        }
+        final String url = query;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    Log.i("old akwam getLinks", "try before connect");
+                    Log.i("old akwam links url", url + "s");
+                    Document doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+                    Log.i("old akwam getLinks", "try after connect");
+
+                    Elements divs = doc.select("div[class]");
+                    for (Element div : divs) {
+                        Log.i("old akwam div", "found div no class");
+                        if (div.hasClass("content-box")) {
+                            Log.i("old akwam div", "found div with class");
+                            Artist a = new Artist();
+                            a.setServer(Artist.SERVER_SHAHID4U);
+
+                            a.setName(div.getElementsByTag("h3").text());
+                            Log.i("old name", div.getElementsByTag("h3").text().toString() + "");
+
+                            a.setUrl(div.getElementsByClass("image").attr("href"));
+                            a.setImage(div.getElementsByClass("image").attr("data-src"));
+                            //Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
+
+                            // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+
+                            MainActivity.artistList.add(a);
+                            Log.i("akwam list size In", MainActivity.artistList.size() + "s");
+                            Log.i("artis in", a.getUrl());
+
+                            // }});
+
+                        }
+                    }
+                    // adapter.notifyDataSetChanged();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // ArtistList adapter = new ArtistList(MainActivity.this, linksList);
+                            //  listViewArtists.setAdapter(adapter);
+                            // MainActivity.artistList.add(a);
+                            //Log.i("artis O", a.getUrl());
+                            Log.i("old akwam list size O", MainActivity.artistList.size() + "s");
+                            adapter.notifyDataSetChanged();
+                            //listViewArtists.setAdapter(adapter);
+                        }
+                    });
+
+                } catch (IOException e) {
+                    //builder.append("Error : ").append(e.getMessage()).append("\n");
+                    Log.i("fail", e.getMessage() + "");
+                }
+            }
+        }).start();
+        Log.i("akwam getLinks", "end");
+    }
+
+    //shahid
+    public void getServersShahid4u(Artist artist){
+        String url2 = artist.getUrl();
+        if (url2.contains("shahid4u.one/episode/")){
+            url2= url2.replace("shahid4u.one/episode/", "shahid4u.one/watch/");
+        }else if (url2.contains("shahid4u.one/film/")){
+            url2 = url2.replace("shahid4u.one/film/", "shahid4u.one/watch/");
+        }
+        final String url3 = url2;
 
 
 
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    //String url = "https://shahid4u.one/watch/%D8%A7%D9%86%D9%85%D9%8A-dragon-quest-dai-no-daibouken-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-10-%D8%A7%D9%84%D8%B9%D8%A7%D8%B4%D8%B1%D8%A9-%D9%85%D8%AA%D8%B1%D8%AC%D9%85%D8%A9";
+
+                    String url = url3;
+                    Log.i("shaihd fetchl1", url);
+
+
+                    Log.i("shaihd fetchl 22", url);
+                    Document doc = Jsoup.connect(url).get();
+
+                    //here get servers
+
+                    String ss = url.trim().replace(" ", "");
+
+                    Elements divs = doc.select("iframe");
+                    MainActivity.artistList.clear();
+                    for (Element div : divs) {
+                       // artist.setUrl();
+                        Artist a = artist;
+                        a.setUrl(div.attr("src"));
+                        a.setIsVideo(true);
+                        MainActivity.artistList.add(a);
+                        //  Elements lists = div.getElementsByAttribute("data-embedd");
+                        // MainActivity.serverCounts= lists.size();
+                        break;
+                    /*    for (Element list : lists) {
+                            Log.i("serverId:", list.attr("data-embedd"));
+                            Log.i("serverName:", list.text());
+                            MainActivity.idList.add(list.attr("data-embedd"));
+                        }
+
+                     */
+
+                    }
+
+
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                          adapter.notifyDataSetChanged();
+                    }});
+
+            } }).start();
+
+        //adapter.notifyDataSetChanged();
+
+
+
+       // MainActivity.artistList.clear();
+    /*    for (String server: MainActivity.serverList){
+            Artist a = artist;
+            a.setUrl(server);
+            a.setIsVideo(true);
+            MainActivity.artistList.add(a);
+            adapter.notifyDataSetChanged();
+        }
+*/
+
+
+    }
+
+    //////////////////////////////////////////////////////////////
     private boolean isGooLink(String url){
         //TODO: check if movie or series
         Log.i("isSeries", url+"");
@@ -498,11 +981,6 @@ public class MainActivity extends AppCompatActivity {
 
 //        String url2 = "http://old.goo-2o.com/5dd7c58d8da14";
 
-
-
-
-
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -514,15 +992,17 @@ public class MainActivity extends AppCompatActivity {
 
                         String url2 = "http://old.goo-2o.com/5dd7c58d8da14";
 
-                            Document doc = Jsoup.connect(url2).timeout(10000).post();
+                            Document doc = Jsoup.connect(url).timeout(7000).get();
 
-                            Elements links = doc.getAllElements();
+                            Elements links = doc.getElementsByClass("download_button");
 
 
                             for (Element link: links){
-                                Log.i("result", link.html() +"");
+                                Log.i("result html", link.html() +"");
+                                Log.i("result text", link.text() +"");
 
                             }
+                            Log.i("sorry", "nothing found");
 
 /*
                     Document doc = Jsoup.connect(url).timeout(6000).get();
@@ -620,137 +1100,8 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }).start();
-        Log.i("akwam getLinks", "end");
-        Log.i("akwam fetchAkwamPageOne", artist.getUrl()+"");
-        Log.i("akwam fetchAkwamPageOne", "end");
 
     }
-
-    private void generateShahid4uSeriesLink(final Artist artist){
-        Log.i("akwam series links", "start");
-        final String url = artist.getUrl();
-        MainActivity.artistList.clear();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                                Log.i("old akwam getLinks", "try before connect");
-
-                                Log.i("old akwam links url", url+"s");
-                                Document doc = Jsoup.connect(url).get();
-                                //Elements links = doc.select("a[href]");
-                                Log.i("old akwam getLinks", "try after connect");
-
-                                Elements divs = doc.select("div[class]");
-                                for (Element div : divs) {
-                                    Log.i("old akwam div", "found div no class");
-                                    if (div.hasClass("content-box"))
-                                    {
-                                        Log.i("old akwam div", "found div with class");
-                                        Artist a = new Artist();
-                                        a.setServer(Artist.SERVER_SHAHID4U);
-
-                                        a.setName(div.getElementsByTag("h3").text());
-                                        Log.i("old name", div.getElementsByTag("h3").text().toString() + "");
-
-                                        a.setUrl(div.getElementsByClass("image").attr("href"));
-                                        a.setImage(div.getElementsByClass("image").attr("data-src"));
-                                        //Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
-
-                                        // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
-
-                                        MainActivity.artistList.add(a);
-                                        Log.i("akwam list size In", MainActivity.artistList.size() + "s");
-                                        Log.i("artis in", a.getUrl());
-
-                                        // }});
-
-                                    }
-                                }
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            // ArtistList adapter = new ArtistList(MainActivity.this, linksList);
-                            //  listViewArtists.setAdapter(adapter);
-                            // MainActivity.artistList.add(a);
-                            //Log.i("artis O", a.getUrl());
-                            Log.i("akwam list size O", MainActivity.artistList.size() + "s");
-                            Collections.reverse(MainActivity.artistList);
-                            adapter.notifyDataSetChanged();
-                            //listViewArtists.setAdapter(adapter);
-                        }});
-                } catch (IOException e) {
-                    //builder.append("Error : ").append(e.getMessage()).append("\n");
-                    Log.i("fail", e.getMessage()+"");
-                }
-
-            }
-        }).start();
-        Log.i("akwam getLinks", "end");
-    }
-
-    private void generateShahid4uLink(final Artist artist) {
-        Log.i("shahid gen link", "start");
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-
-                    String url = artist.getUrl();
-                    Log.i("shaihd fetchl1", url);
-
-                    if (url.contains("shahid4u.one/episode/")){
-                       url= url.replace("shahid4u.one/episode/", "shahid4u.one/watch/");
-                    }else if (url.contains("shahid4u.one/film/")){
-                       url = url.replace("shahid4u.one/film/", "shahid4u.one/watch/");
-                    }
-                    Log.i("shaihd fetchl 22", url);
-                    Document doc = Jsoup.connect(url).get();
-
-                    Elements iframes = doc.select("iframe");
-                    for (Element link: iframes){
-                            url = link.attr("src");
-                            Log.i("result", url+"");
-                            break;
-                    }
-                    String ss = url.trim().replace(" ", "");
-                    Log.i("result sss", ss+"");
-                    // runOnUiThread(new Runnable() {
-                    //   @Override
-                    // public void run() {
-                    // textViewResponse.setText(builder.toString());
-                    //url=url.concat(".html");
-                    Log.i("akwam fetchl4", ss+"");
-                  //  String type = "video/*"; // It works for all video application
-                    String type = "text/html"; // It works for all video application
-                    Uri uri = Uri.parse(ss);
-                    Intent in1 = new Intent(Intent.ACTION_VIEW, uri);
-                    in1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    //  in1.setPackage("org.videolan.vlc");
-                    in1.setDataAndType(uri, type);
-                    Log.i("video started", uri.toString()+"");
-                    startActivity(in1);
-                    Log.i("akwam method", "artikel in method");
-                    Log.i("akwam Url", artist.getUrl()+"");
-                    //      }
-                    //    });
-                } catch (IOException e) {
-                    //builder.append("Error : ").append(e.getMessage()).append("\n");
-                    Log.i("fail", e.getMessage()+"");
-                }
-            }
-        }).start();
-        Log.i("akwam getLinks", "end");
-        Log.i("akwam fetchAkwamPageOne", artist.getUrl()+"");
-        Log.i("akwam fetchAkwamPageOne", "end");
-
-    }
-
-    private void generateAkwamSeriesLink(final Artist artist){
-        Log.i("akwam series links", "start");
-        Log.i("akwam getLinks", "end");
-    }
-
 
     private void generatAkwamLinkRessulotions(Artist artist) {
         MainActivity.artistList.clear();
@@ -806,96 +1157,11 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void generateAkwamLink(final Artist artist) {
-        Log.i("akwam fetchAkwamPageOne", "start");
-        Log.i("akwam getLinks", "end");
-        Log.i("akwam fetchAkwamPageOne", artist.getUrl());
-        Log.i("akwam fetchAkwamPageOne", "end");
-    }
-
-    /**
-     * search artikle in akwam
-     */
-    private void search() {
-        String name = editTextName.getText().toString();
-
-        if (!TextUtils.isEmpty(name)){
-            MainActivity.artistList.clear();
-           searchAkwam(name, false);
-        }
-            Toast.makeText(this, " Searching for " + name , Toast.LENGTH_LONG).show();
-    }
 
     private void getLinks(String query, final boolean isSeries) {
         Log.i("akwam getLinks", "start");
         Log.i("akwam getLinks", "end");
 
-    }
-
-    private void getShahid4uLinks(String query, boolean isSeries) {
-        Log.i("akwam getLinks", "start");
-
-        if (!isSeries) {
-            query = "https://shahid4u.one/search?s=" + query;
-        }
-        final String url = query;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                try {
-            Log.i("old akwam getLinks", "try before connect");
-            Log.i("old akwam links url", url + "s");
-            Document doc = Jsoup.connect(url).get();
-            //Elements links = doc.select("a[href]");
-            Log.i("old akwam getLinks", "try after connect");
-
-            Elements divs = doc.select("div[class]");
-            for (Element div : divs) {
-                Log.i("old akwam div", "found div no class");
-                if (div.hasClass("content-box")) {
-                    Log.i("old akwam div", "found div with class");
-                    Artist a = new Artist();
-                    a.setServer(Artist.SERVER_SHAHID4U);
-
-                    a.setName(div.getElementsByTag("h3").text());
-                    Log.i("old name", div.getElementsByTag("h3").text().toString() + "");
-
-                    a.setUrl(div.getElementsByClass("image").attr("href"));
-                    a.setImage(div.getElementsByClass("image").attr("data-src"));
-                    //Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
-
-                    // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
-
-                    MainActivity.artistList.add(a);
-                    Log.i("akwam list size In", MainActivity.artistList.size() + "s");
-                    Log.i("artis in", a.getUrl());
-
-                    // }});
-
-                }
-            }
-           // adapter.notifyDataSetChanged();
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    // ArtistList adapter = new ArtistList(MainActivity.this, linksList);
-                    //  listViewArtists.setAdapter(adapter);
-                    // MainActivity.artistList.add(a);
-                    //Log.i("artis O", a.getUrl());
-                    Log.i("old akwam list size O", MainActivity.artistList.size() + "s");
-                    adapter.notifyDataSetChanged();
-                    // listViewArtists.setAdapter(adapter);
-                }
-            });
-
-        } catch (IOException e) {
-            //builder.append("Error : ").append(e.getMessage()).append("\n");
-            Log.i("fail", e.getMessage() + "");
-        }
-    }
-        }).start();
-        Log.i("akwam getLinks", "end");
     }
 
     private void getOldAkoamLinks(String query, boolean isSeries) {
