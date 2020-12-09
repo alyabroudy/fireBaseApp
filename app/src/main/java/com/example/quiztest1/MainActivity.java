@@ -94,6 +94,10 @@ public class MainActivity extends AppCompatActivity {
 
         String movies = "https://akwam.co/movies";
         searchAkwam(movies, true);
+       // String series = "https://akwam.co/series";
+       // searchAkwam(series, true);
+       // Collections.shuffle(MainActivity.artistList);
+       // listViewArtists.setAdapter(adapter);
 
 
 
@@ -190,8 +194,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void start(){
         if (MainActivity.artistList.isEmpty()){
-            String movies = "https://akwam.co/movies";
-            searchAkwam(movies, true);
+             String movies = "https://akwam.co/movies";
+             searchAkwam(movies, true);
+           // String series = "https://akwam.co/series";
+           // searchAkwam(series, true);
+           // Collections.shuffle(MainActivity.artistList);
+           // listViewArtists.setAdapter(adapter);
         }
     }
 
@@ -331,6 +339,7 @@ public class MainActivity extends AppCompatActivity {
                                 adapter.notifyDataSetChanged();
                                 getShahid4uLinks(oldAkwamQuery, false);
                             }
+                            Collections.shuffle(MainActivity.artistList);
                             listViewArtists.setAdapter(adapter);
                         }});
                 } catch (IOException e) {
