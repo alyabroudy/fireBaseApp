@@ -87,6 +87,7 @@ public class SearchActivity extends AppCompatActivity {
     public void start(){
         if (null == SearchActivity.searchResultList || SearchActivity.searchResultList.isEmpty()){
             searchAkwam(query, false);
+            searchOldAkoamLinks(query, false);
         }
     }
 
@@ -99,19 +100,29 @@ public class SearchActivity extends AppCompatActivity {
      * @return true if the link is series link
      */
     private boolean isSeriesLinkAkwam(Artist artist){
-        Log.i(TAG_AKWAM, "IsSerise Start");
-
         Log.i(TAG_AKWAM, "IsSerise End URL ="+artist.getUrl());
         return artist.getUrl().contains("akwam.co/series") || artist.getUrl().contains("akwam.co/movies") ;
     }
 
     public void searchAkwam(String query, boolean isSeries){
-        Log.i(TAG_AKWAM, "Search Start");
         final String oldAkwamQuery = query;
 
         if (!isSeries){
-            query ="https://akwam.co/search?q=" + query;
+            if (query.trim().equals("مسلسلات")) {
+                query = "https://akwam.co/series";
+                Log.i(TAG_AKWAM, "Series");
+            }else if (query.trim().equals("كوميدي")){
+                Log.i(TAG_AKWAM, "Comedy");
+                query = "https://akwam.co/movies?section=0&category=20&rating=0&year=0&language=0&format=0&quality=0";
+            }else if (query.trim().equals("رعب")){
+                Log.i(TAG_AKWAM, "Horror");
+                query = "https://akwam.co/movies?section=0&category=22&rating=0&year=0&language=0&format=0&quality=0";
+            }else {
+                query ="https://akwam.co/search?q=" + query;
+            }
         }
+
+
 
         final String url = query;
         new Thread(new Runnable() {
@@ -132,7 +143,6 @@ public class SearchActivity extends AppCompatActivity {
                             ){
                                 Artist a = new Artist();
                                 a.setServer(Artist.SERVER_AKWAM);
-                                Log.i("link found", link.attr("href")+"");
                                 a.setName(link.getElementsByAttribute("src").attr("alt"));
                                 a.setUrl(link.attr("href"));
                                 a.setImage(link.getElementsByAttribute("src").attr("data-src"));
@@ -144,7 +154,6 @@ public class SearchActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Log.i("akwam list size O", MainActivity.artistList.size() + "s");
                             if (!isSeries){
                                 adapterSearch.notifyDataSetChanged();
                                 getShahid4uLinks(oldAkwamQuery, false);
@@ -155,7 +164,6 @@ public class SearchActivity extends AppCompatActivity {
                     //builder.append("Error : ").append(e.getMessage()).append("\n");
                     Log.i(TAG_AKWAM, "error"+e.getMessage());
                 }
-
             }
         }).start();
         Log.i(TAG_AKWAM, "Search End");
@@ -169,15 +177,11 @@ public class SearchActivity extends AppCompatActivity {
 
     //shahid
     private boolean isSeriesLinkShahid(Artist artist){
-        Log.i(TAG_AKWAM, "IsSerise Start");
-
         Log.i(TAG_AKWAM, "IsSerise End URL ="+artist.getUrl());
         return artist.getUrl().contains("shahid4u.one/series") || artist.getUrl().contains("shahid4u.one/season") ;
     }
 
     private void getShahid4uLinks(String query, boolean isSeries) {
-        Log.i("akwam getLinks", "start");
-
         if (!isSeries) {
             query = "https://shahid4u.one/search?s=" + query;
         }
@@ -187,47 +191,28 @@ public class SearchActivity extends AppCompatActivity {
             public void run() {
 
                 try {
-                    Log.i("old akwam getLinks", "try before connect");
-                    Log.i("old akwam links url", url + "s");
                     Document doc = Jsoup.connect(url).get();
                     //Elements links = doc.select("a[href]");
-                    Log.i("old akwam getLinks", "try after connect");
-
                     Elements divs = doc.select("div[class]");
                     for (Element div : divs) {
-                        Log.i("old akwam div", "found div no class");
                         if (div.hasClass("content-box")) {
-                            Log.i("old akwam div", "found div with class");
                             Artist a = new Artist();
                             a.setServer(Artist.SERVER_SHAHID4U);
 
                             a.setName(div.getElementsByTag("h3").text());
-                            Log.i("old name", div.getElementsByTag("h3").text().toString() + "");
-
                             a.setUrl(div.getElementsByClass("image").attr("href"));
                             a.setImage(div.getElementsByClass("image").attr("data-src"));
                             //Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
 
                             // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
-
                             SearchActivity.searchResultList.add(a);
-                            Log.i("akwam list size In", SearchActivity.searchResultList.size() + "s");
-                            Log.i("artis in", a.getUrl());
-
-                            // }});
-
                         }
                     }
                     // adapter.notifyDataSetChanged();
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            // ArtistList adapter = new ArtistList(MainActivity.this, linksList);
-                            //  listViewArtists.setAdapter(adapter);
-                            // MainActivity.artistList.add(a);
-                            //Log.i("artis O", a.getUrl());
-                            Log.i("old akwam list size O", SearchActivity.searchResultList.size() + "s");
-                            adapterSearch.notifyDataSetChanged();
+                             adapterSearch.notifyDataSetChanged();
                              listViewArtists.setAdapter(adapterSearch);
                         }
                     });
@@ -238,7 +223,64 @@ public class SearchActivity extends AppCompatActivity {
                 }
             }
         }).start();
-        Log.i("akwam getLinks", "end");
+    }
+
+    //old Akwam
+    private void searchOldAkoamLinks(String query, boolean isSeries) {
+
+        if (!isSeries){
+            query = "https://old.akwam.co/search/" + query;
+        }
+        Log.i("old akwam Search", query);
+        final String url = query;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Document doc = Jsoup.connect(url).get();
+
+                    Elements divs = doc.select("div");
+                    for (Element div : divs) {
+                        if (div.hasClass("tags_box"))
+                        {
+                            String url = div.getElementsByTag("a").attr("href");
+                            if (url.contains("لعبة") || url.contains("كورس")){
+                                continue;
+                            }
+
+                            Artist a = new Artist();
+                            a.setServer(Artist.SERVER_OLD_AKWAM);
+
+                            a.setName(div.getElementsByTag("h1").text());
+                           // a.setUrl(div.getElementsByTag("a").attr("href"));
+                            a.setUrl(url);
+
+                            String image = div.getElementsByTag("div").attr("style");
+                            image = image.substring(image.indexOf('(')+1,image.indexOf(')'));
+                            a.setImage(image);
+                            //Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
+
+                            // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+
+                            SearchActivity.searchResultList.add(a);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    //Collections.reverse(MainActivity.artistList);
+                                    adapterSearch.notifyDataSetChanged();
+                                }
+                            });
+
+                            // }});
+
+                        }
+                    }
+                } catch (IOException e) {
+                    //builder.append("Error : ").append(e.getMessage()).append("\n");
+                    Log.i("fail", e.getMessage()+"");
+                }
+            }
+        }).start();
     }
 
 

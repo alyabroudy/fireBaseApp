@@ -29,18 +29,13 @@ tools:context=".MainActivity">
     android:layout_below="@id/editTextName"
     tools:layout_editor_absoluteX="170dp"
     tools:layout_editor_absoluteY="139dp" />
-<TextView
-    android:id="@+id/textView_response"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_below="@id/buttonSearch"
-    />
+
 
 <ListView
     android:id="@+id/listViewArtist"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_below="@id/textView_response" />
+    android:layout_below="@id/buttonSearch" />
 
 
 </RelativeLayout>

@@ -37,7 +37,7 @@ public class ArtistList extends ArrayAdapter<Artist> {
 
         TextView textViewName = (TextView) listViewItem.findViewById(R.id.textViewName);
         TextView textViewUrl = (TextView) listViewItem.findViewById(R.id.textViewUrl);
-        //TextView textViewGenre = (TextView) listViewItem.findViewById(R.id.textViewGenre);
+        TextView textViewGenre = (TextView) listViewItem.findViewById(R.id.textViewGenre);
         ImageView imageViewImage = (ImageView) listViewItem.findViewById(R.id.imageView);
        // TextView textViewRate = (TextView) listViewItem.findViewById(R.id.textView_rate);
 
@@ -53,6 +53,9 @@ public class ArtistList extends ArrayAdapter<Artist> {
       //  if (artist.getRate() != null){
        //     textViewRate.setText(artist.getRate());
        // }
+        if (artist.getGenre() != null){
+                 textViewGenre.setText(artist.getGenre());
+             }
 
         return listViewItem;
     }

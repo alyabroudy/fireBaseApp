@@ -6,6 +6,19 @@
     android:layout_height="match_parent"
     tools:context=".ServersListActivity">
 
+    <WebView
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:id="@+id/webView"
+        android:layout_weight="0.5"
+        tools:ignore="MissingConstraints" />
+    <WebView
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:id="@+id/webView2"
+        android:layout_weight="0.5"
+        tools:ignore="MissingConstraints" />
+
     <ListView
         android:id="@+id/listViewArtist"
         android:layout_width="match_parent"

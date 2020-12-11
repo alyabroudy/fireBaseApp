@@ -18,11 +18,14 @@
             android:label="الحلقات" />
         <activity
             android:name=".ServersListActivity"
-            android:label="سيرفرات المشاهده" />
-        <activity android:name=".FetchServerActivity" />
+            android:label="سيرفرات المشاهده"
+            android:hardwareAccelerated="true"/>
+        <activity android:name=".FetchServerActivity"
+            android:hardwareAccelerated="true"/>
         <activity
             android:name=".VideoResolutionActivity"
-            android:label="اختيار الدقة" />
+    android:hardwareAccelerated="true"
+    android:label="مشاهدة" />
         <activity
             android:name=".SearchActivity"
             android:label="نتائج البحث" />
