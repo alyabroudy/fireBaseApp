@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
 
         String movies = "https://akwam.co/movies";
         //String movies2 = "https://old.akwam.co/cat/156/%D8%A7%D9%84%D8%A3%D9%81%D9%84%D8%A7%D9%85-%D8%A7%D9%84%D8%A7%D8%AC%D9%86%D8%A8%D9%8A%D8%A9";
-        searchAkwam(movies, true);
+  //      searchAkwam(movies, true);
       //  searchOldAkoamLinks(movies2, true);
        // String series = "https://akwam.co/series";
         //searchAkwam(series, true);
@@ -199,8 +199,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void start(){
         if (MainActivity.artistList.isEmpty()){
-             String movies = "https://akwam.co/movies";
-             searchAkwam(movies, true);
+         //    String movies = "https://akwam.co/movies";
+          //   searchAkwam(movies, true);
         //    String series = "https://akwam.co/series";
           //  searchAkwam(series, true);
            // Collections.shuffle(MainActivity.artistList);
