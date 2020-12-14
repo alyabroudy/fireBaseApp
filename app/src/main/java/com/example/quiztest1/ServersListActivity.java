@@ -141,10 +141,11 @@ public class ServersListActivity extends AppCompatActivity {
                 }
                 else if (artist.getServer().equals(Artist.SERVER_SHAHID4U)){
 
+                    /*
                     Intent webViewIntent = new Intent(ServersListActivity.this, VideoResolutionActivity.class);
                     webViewIntent.putExtra("URL", artist.getUrl());
                     startActivity(webViewIntent);
-                    /*
+                    */
                     String type = "video/*";
                     if (artist.getServer().equals(Artist.SERVER_SHAHID4U)){
                         type = "text/html"; // It works for all video application
@@ -159,7 +160,6 @@ public class ServersListActivity extends AppCompatActivity {
                     Log.i("video started", uri.toString() + "");
                     startActivity(videoIntent);
 
-                 */
                 }else {
                     fetchLinkAndVideoOldAkwam(artist);
                 }
@@ -189,7 +189,7 @@ public class ServersListActivity extends AppCompatActivity {
                 fetchOneLinkAkwam(artist);
             }else if (artist.getServer().equals(Artist.SERVER_SHAHID4U)){
                 fetchOneLinkShahid4u(artist);
-                String url2 = artist.getUrl();
+             /*   String url2 = artist.getUrl();
                 if (url2.contains("shahid4u.one/episode/")){
                     url2= url2.replace("shahid4u.one/episode/", "shahid4u.one/watch/");
                 }else if (url2.contains("shahid4u.one/film/")){
@@ -199,6 +199,8 @@ public class ServersListActivity extends AppCompatActivity {
 
                 simpleWebView.loadUrl(url3);
                 simpleWebView2.loadUrl(url3);
+
+              */
 
             }else {
                 fetchSeriesLinkOldAkwam(artist);
