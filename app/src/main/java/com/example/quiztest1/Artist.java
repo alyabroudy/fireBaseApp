@@ -6,6 +6,7 @@ public class Artist {
     private String url;
     private String oldUrl;
     private String genre;
+    private String description;
     private String image;
     private String rate;
     private String server;
@@ -14,12 +15,13 @@ public class Artist {
     final static String SERVER_AKWAM = "Akwam";
     final static String SERVER_OLD_AKWAM = "Old Akwam";
     final static String SERVER_SHAHID4U = "Shahid4u";
+    final static String SERVER_CIMA4U = "Cima4u";
 
 
 
     public Artist(){}
 
-    public Artist(String id, String name, String genre, String url, String image, String rate, String server, boolean isVideo) {
+    public Artist(String id, String name, String genre, String url, String image, String rate, String server, boolean isVideo, String description) {
         this.id = id;
         this.name = name;
         this.genre = genre;
@@ -28,6 +30,7 @@ public class Artist {
         this.rate = rate;
         this.server = server;
         this.isVideo = isVideo;
+        this.description = description;
     }
 
     public String getUrl() {
@@ -100,5 +103,13 @@ public class Artist {
 
     public void setIsVideo(boolean isVideo) {
         this.isVideo = isVideo;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

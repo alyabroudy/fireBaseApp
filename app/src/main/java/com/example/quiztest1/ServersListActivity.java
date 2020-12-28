@@ -6,12 +6,17 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -28,8 +33,12 @@ public class ServersListActivity extends AppCompatActivity {
     ListView listViewArtists;
     Artist artist;
     String TAG_AKWAM = "Akwam";
+    String TAG_SHAHID4U = "Shahid4u";
+    String TAG_CIMA4U = "Cima4u";
     String TAG = "ServersList";
     ArtistList adapterServersList;
+   // ImageView imageView;
+    TextView textViewDesc;
     static List<Artist> serversArtistList;
 
     static int shahidServersIdCounter=5;
@@ -42,6 +51,9 @@ public class ServersListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_servers_list);
 
+      //  imageView = (ImageView)  findViewById(R.id.imageView);
+        textViewDesc = (TextView)  findViewById(R.id.textViewDesc);
+        textViewDesc.setMovementMethod(new ScrollingMovementMethod());
 
         artist = new Artist();
         artist.setUrl(getIntent().getStringExtra("ARTIST_URL"));
@@ -139,20 +151,21 @@ public class ServersListActivity extends AppCompatActivity {
                 if (artist.getServer().equals(Artist.SERVER_AKWAM)){
                     fetchLinkVideoAkwam(artist);
                 }
-                else if (artist.getServer().equals(Artist.SERVER_SHAHID4U)){
+                else if (artist.getServer().equals(Artist.SERVER_CIMA4U) ) {
 
                     /*
                     Intent webViewIntent = new Intent(ServersListActivity.this, VideoResolutionActivity.class);
                     webViewIntent.putExtra("URL", artist.getUrl());
                     startActivity(webViewIntent);
                     */
-                    String type = "video/*";
-                    if (artist.getServer().equals(Artist.SERVER_SHAHID4U)){
-                        type = "text/html"; // It works for all video application
-                    }
+                    //  String type = "video/*";
+                    // if (artist.getServer().equals(Artist.SERVER_SHAHID4U)){
+                    String type = "text/html"; // It works for all video application
+                    // }
 
                     String url = artist.getUrl().trim().replace(" ", "");
-                    Uri uri = Uri.parse(url+"");
+                    //  url = url.replace("/video.mp4", "");
+                    Uri uri = Uri.parse(url + "");
                     Intent videoIntent = new Intent(Intent.ACTION_VIEW, uri);
                     videoIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     //  in1.setPackage("org.videolan.vlc");
@@ -160,6 +173,24 @@ public class ServersListActivity extends AppCompatActivity {
                     Log.i("video started", uri.toString() + "");
                     startActivity(videoIntent);
 
+                }else if (artist.getServer().equals(Artist.SERVER_SHAHID4U)){
+                    if (artist.getUrl().contains("vidhd")){
+                        fetchVideoLindVidHd(artist);
+                    }
+                    else{
+                        String type = "text/html"; // It works for all video application
+                        // }
+
+                        String url = artist.getUrl().trim().replace(" ", "");
+                        //  url = url.replace("/video.mp4", "");
+                        Uri uri = Uri.parse(url + "");
+                        Intent videoIntent = new Intent(Intent.ACTION_VIEW, uri);
+                        videoIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        //  in1.setPackage("org.videolan.vlc");
+                        videoIntent.setDataAndType(uri, type);
+                        Log.i("video started", uri.toString() + "");
+                        startActivity(videoIntent);
+                    }
                 }else {
                     fetchLinkAndVideoOldAkwam(artist);
                 }
@@ -189,6 +220,9 @@ public class ServersListActivity extends AppCompatActivity {
                 fetchOneLinkAkwam(artist);
             }else if (artist.getServer().equals(Artist.SERVER_SHAHID4U)){
                 fetchOneLinkShahid4u(artist);
+                fetchOtherServersShahid(artist,2, 5);
+                fetchOtherServersShahid(artist,3, 6);
+            //    fetchOtherServersShahid(artist,3, 6);
              /*   String url2 = artist.getUrl();
                 if (url2.contains("shahid4u.one/episode/")){
                     url2= url2.replace("shahid4u.one/episode/", "shahid4u.one/watch/");
@@ -202,7 +236,14 @@ public class ServersListActivity extends AppCompatActivity {
 
               */
 
-            }else {
+            }else if (artist.getServer().equals(Artist.SERVER_CIMA4U)){
+                if (artist.getIsVideo()){
+                    fetchOnePageLinkCima4u(artist);
+                }else {
+                    fetchOneLinkCima4u(artist, "");
+                }
+            }
+            else {
                 fetchSeriesLinkOldAkwam(artist);
             }
         }
@@ -231,10 +272,29 @@ public class ServersListActivity extends AppCompatActivity {
                     // page2 fetch goo- links
                     String p2Caption = "/link/";
                     Document doc = Jsoup.connect(url).get();
+
+                    //description
+                    Elements decDivs = doc.select("h2");
+
+
+                    for (Element div: decDivs){
+                        final String description= div.getElementsByTag("p").html();
+                        Log.i("description", "found:"+description);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                textViewDesc.setText(description);
+                            }
+                        });
+                        if (null != description && !description.equals("")){break;}
+                    }
+
+
+
                     //TODO: find better way to fetch links
                     Elements divs = doc.getElementsByClass("tab-content quality");
                     for (Element div : divs) {
-                        Artist a = new Artist(artist.getId(), "", artist.getGenre(),"",artist.getImage(),artist.getRate(),artist.getServer(),true );
+                        Artist a = new Artist(artist.getId(), "", artist.getGenre(),"",artist.getImage(),artist.getRate(),artist.getServer(),true ,"");
                         Elements links = div.getElementsByAttribute("href");
                         for (Element link: links){
                             if (link.attr("href").contains(p2Caption)) {
@@ -323,10 +383,10 @@ public class ServersListActivity extends AppCompatActivity {
     //shahid
     public void fetchOneLinkShahid4u(Artist artist){
         String url2 = artist.getUrl();
-        if (url2.contains("shahid4u.one/episode/")){
-            url2= url2.replace("shahid4u.one/episode/", "shahid4u.one/watch/");
-        }else if (url2.contains("shahid4u.one/film/")){
-            url2 = url2.replace("shahid4u.one/film/", "shahid4u.one/watch/");
+        if (url2.contains("/episode/")){
+            url2= url2.replace("/episode/", "/watch/");
+        }else if (url2.contains("/film/")){
+            url2 = url2.replace("/film/", "/watch/");
         }
         final String url3 = url2;
 
@@ -341,7 +401,7 @@ public class ServersListActivity extends AppCompatActivity {
 
 
                     Log.i("shaihd fetchl 22", url);
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).timeout(6000).get();
 
                     //here get servers
 
@@ -357,11 +417,15 @@ public class ServersListActivity extends AppCompatActivity {
                         a.setGenre(getWebName(div.attr("src")));
                         ServersListActivity.serversArtistList.add(a);
                         //  Elements lists = div.getElementsByAttribute("data-embedd");
+
+
+
+
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 adapterServersList.notifyDataSetChanged();
-                                listViewArtists.setAdapter(adapterServersList);
+                               // listViewArtists.setAdapter(adapterServersList);
                             }});
                         // MainActivity.serverCounts= lists.size();
                         break;
@@ -374,6 +438,15 @@ public class ServersListActivity extends AppCompatActivity {
                      */
 
                     }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //adapterServersList.notifyDataSetChanged();
+                            listViewArtists.setAdapter(adapterServersList);
+
+                        }});
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -440,6 +513,7 @@ public class ServersListActivity extends AppCompatActivity {
                     }
                 }
 
+
                 Log.i("Returned Final", serverUrl + "name"+ serverName);
 
                // ServersListActivity.serversArtistList.add(a);
@@ -451,6 +525,107 @@ public class ServersListActivity extends AppCompatActivity {
             Log.i("Returned Result", "method end resultcode:"+resultCode);
           //  textView1.setText(message);
         }
+        else  if(requestCode == 3)
+        {
+            if (resultCode == RESULT_OK){
+                String serverUrl=data.getStringExtra("result");
+                String serverName = data.getStringExtra("ARTIST_SERVER");
+                String image = data.getStringExtra("ARTIST_IMAGE");
+                String aName = getWebName(serverUrl);
+                boolean isVideo = data.getBooleanExtra("ARTIST_IS_VIDEO", true);
+                Log.i("Returned Result", serverUrl + "name"+ serverName);
+                Artist a = new Artist();
+                a.setName(aName);
+                a.setImage(image);
+                a.setIsVideo(isVideo);
+                a.setUrl(serverUrl);
+                a.setServer(serverName);
+                Log.i("Returned Final", serverUrl + "name"+ serverName);
+                 ServersListActivity.serversArtistList.add(a);
+                 adapterServersList.notifyDataSetChanged();
+                 listViewArtists.setAdapter(adapterServersList);
+            }
+            if (resultCode == RESULT_CANCELED){
+                Log.i("Returned Result", "Nothing returned");
+            }
+            Log.i("Returned Result", "method end resultcode:"+resultCode);
+            //  textView1.setText(message);
+        }
+
+        else  if(requestCode == 4)
+        {
+            if (resultCode == RESULT_OK){
+                String type = "video/*"; // It works for all video application
+                // }
+                String serverUrl=data.getStringExtra("result");
+                String serverName = data.getStringExtra("ARTIST_SERVER");
+                Log.i("Returned Result", serverUrl + "name"+ serverName);
+
+                Uri uri = Uri.parse(serverUrl + "");
+                Intent videoIntent = new Intent(Intent.ACTION_VIEW, uri);
+                videoIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                //  in1.setPackage("org.videolan.vlc");
+                videoIntent.setDataAndType(uri, type);
+                Log.i("shahid video started", uri.toString() + "");
+                startActivity(videoIntent);
+            }
+            if (resultCode == RESULT_CANCELED){
+                Log.i("Returned Result", "Nothing returned");
+            }
+            Log.i("Returned Result", "method end resultcode:"+resultCode);
+            //  textView1.setText(message);
+        }
+
+        else  if(requestCode == 5 || requestCode == 6)
+        {
+            if (resultCode == RESULT_OK){
+                String serverUrl=data.getStringExtra("result");
+                String serverName = data.getStringExtra("ARTIST_SERVER");
+                String image = data.getStringExtra("ARTIST_IMAGE");
+                String aName = getWebName(serverUrl);
+                boolean isVideo = data.getBooleanExtra("ARTIST_IS_VIDEO", true);
+                Log.i("Returned Result", serverUrl + "name"+ serverName);
+                Artist a = new Artist();
+                a.setName(aName);
+                a.setImage(image);
+                a.setIsVideo(isVideo);
+                a.setUrl(serverUrl);
+                a.setServer(serverName);
+                Log.i("Returned Final", serverUrl + "name"+ serverName);
+                ServersListActivity.serversArtistList.add(a);
+                adapterServersList.notifyDataSetChanged();
+                listViewArtists.setAdapter(adapterServersList);
+
+            }
+            if (resultCode == RESULT_CANCELED){
+                Log.i("Returned Result", "Nothing returned");
+            }
+            Log.i("Returned Result:"+requestCode, "method end resultcode:"+resultCode);
+            //  textView1.setText(message);
+        }
+    }
+
+    public void fetchOtherServersShahid(Artist artist, int serverId, int requestCode){
+
+        String url2 = artist.getUrl();
+        if (url2.contains("/episode/")){
+            url2= url2.replace("/episode/", "/watch/");
+        }else if (url2.contains("/film/")){
+            url2 = url2.replace("/film/", "/watch/");
+        }
+
+        Intent fetchServerIntent = new Intent(ServersListActivity.this, FetchServerActivity.class);
+        fetchServerIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        fetchServerIntent.putExtra("PAGE_NUMBER", 5);  //to fetch goo page = 1
+        fetchServerIntent.putExtra("ARTIST_URL", url2);
+        fetchServerIntent.putExtra("SERVER_ID", serverId);
+        fetchServerIntent.putExtra("ARTIST_NAME", artist.getName());
+        fetchServerIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+        fetchServerIntent.putExtra("ARTIST_SERVER", artist.getServer());
+        fetchServerIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+
+        Log.i(TAG, "Shahid Other servers url:"+artist.getUrl());
+        startActivityForResult(fetchServerIntent, requestCode);
     }
 
     public void fetchServersCountShahid4u(Artist artist){
@@ -625,6 +800,25 @@ public class ServersListActivity extends AppCompatActivity {
         return item.substring(item.indexOf("//")+1, item.indexOf('.'));
     }
 
+
+    //new way shahid
+    public void fetchVideoLindVidHd(Artist artist){
+
+        Intent fetchServerIntent = new Intent(ServersListActivity.this, FetchServerActivity.class);
+        fetchServerIntent.putExtra("PAGE_NUMBER", 4);  //to fetch goo page = 1
+        fetchServerIntent.putExtra("ARTIST_URL", artist.getUrl());
+        fetchServerIntent.putExtra("ARTIST_NAME", artist.getName());
+        fetchServerIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+        fetchServerIntent.putExtra("ARTIST_SERVER", artist.getServer());
+        fetchServerIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+
+        Log.i(TAG, "VIDHD&V url:"+artist.getUrl());
+        startActivityForResult(fetchServerIntent, 4);
+
+
+    }
+
+
     //old akwam
     public void fetchLinkAndVideoOldAkwam(Artist artist){
 
@@ -664,6 +858,21 @@ public class ServersListActivity extends AppCompatActivity {
                 try {
                     Document doc = Jsoup.connect(url).get();
                     //Elements links = doc.select("a[href]");sw
+
+                    //get profile image
+                //    String imageLink = doc.getElementsByClass("fancybox-thumbs").attr("href");
+                    //get description
+                    String description = doc.getElementsByClass("sub_desc").text();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            textViewDesc.setText(description);
+                        }
+                    });
+
+
+                    //get episodes
                     Elements divs = doc.select("div");
                     for (Element div : divs) {
                         if (div.hasClass("sub_episode_links")) {
@@ -796,6 +1005,74 @@ public class ServersListActivity extends AppCompatActivity {
         //String url2 = "https://old.akwam.co/download/3c472024a3f1/High-Seas-S02-Ep01-720p-WEB-DL-akoam-net-mkv";
         Log.i("videooo1", url);
         simpleWebView.loadUrl(url);
+    }
+
+
+    //cima4u
+    public void fetchOneLinkCima4u(Artist artist, String url){
+        Intent fetchServerIntent = new Intent(ServersListActivity.this, FetchServerActivity.class);
+        fetchServerIntent.putExtra("PAGE_NUMBER", 3);  //to fetch goo page = 1
+        if (url.equals("")){
+            fetchServerIntent.putExtra("ARTIST_URL", artist.getUrl());
+        }else{
+            fetchServerIntent.putExtra("ARTIST_URL", url);
+        }
+        fetchServerIntent.putExtra("ARTIST_NAME", artist.getName());
+        fetchServerIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+        fetchServerIntent.putExtra("ARTIST_SERVER", artist.getServer());
+        fetchServerIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+
+        Log.i(TAG, "Cima         fetchServerIntent.putExtra(\"ARTIST_NAME\", artist.getName());\n&V url:"+artist.getUrl());
+        startActivityForResult(fetchServerIntent, 3);
+    }
+
+    public void fetchOnePageLinkCima4u(Artist artist){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String url = artist.getUrl();
+                    Log.i(TAG_CIMA4U, "ur:"+url);
+                    Document doc = Jsoup.connect(url).timeout(6000).get();
+                    //Elements links = doc.select("a[href]");
+
+                    //get link of episodes page
+                    Elements divs = doc.select("div[class]");
+                    for (Element div : divs) {
+                        if (div.hasClass("SingleContentSide"))
+                        {
+                            Log.i(TAG_CIMA4U, "elemet fount a");
+                            boolean found=false;
+                            Elements links = div.getElementsByAttribute("href");
+                            for (Element link : links) {
+                                Log.i(TAG_CIMA4U, "elemet a:"+link.attr("href"));
+                                if (link.attr("href").contains("cima4u.io")){
+                                    url = link.attr("href");
+                                    found=true;
+                                    break;
+                                }
+
+                            }
+                            if (found){break;}
+                        }
+                        // LinkSeriesActivity.seriesArtistList.add(a);
+                    }
+                    fetchOneLinkCima4u(artist, url);
+
+
+             /*       runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                        }});
+
+              */
+                } catch (IOException e) {
+                    Log.i("fail", e.getMessage()+"");
+                }
+
+            }
+        }).start();
     }
 
 
