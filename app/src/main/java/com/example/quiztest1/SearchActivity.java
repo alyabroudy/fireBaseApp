@@ -3,6 +3,7 @@ package com.example.quiztest1;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -30,6 +31,7 @@ public class SearchActivity extends AppCompatActivity {
     String TAG_AKWAM = "Akwam";
     String TAG_CIMA4U = "Cima4u";
     String TAG_AFLAM_PRO = "AflamPro";
+    String TAG_FASELHD= "FaselHd";
     static List<Artist> searchResultList;
     ArtistList adapterSearch;
 
@@ -58,15 +60,19 @@ public class SearchActivity extends AppCompatActivity {
                 Artist artist = searchResultList.get(position);
                 //  artist.setUrl("https://old.goo-2o.com/5dd7c58d8da14");
                 if (isSeriesLink(artist) ){
-                    Log.i(TAG, "OnCreate. is series");
-                    Intent seriesLinkIntent = new Intent(SearchActivity.this, LinkSeriesActivity.class);
-                    seriesLinkIntent.putExtra("ARTIST_URL", artist.getUrl());
-                    seriesLinkIntent.putExtra("ARTIST_NAME", artist.getName());
-                    seriesLinkIntent.putExtra("ARTIST_IMAGE", artist.getImage());
-                    seriesLinkIntent.putExtra("ARTIST_SERVER", artist.getServer());
-                    seriesLinkIntent.putExtra("ARTIST_IS_VIDEO", false);
-                    //start the activity
-                    startActivity(seriesLinkIntent);
+                    if (artist.getServer().equals(Artist.SERVER_FASELHD)){
+                        fetchFaselHdSession(artist);
+                    }else{
+                        Log.i(TAG, "OnCreate. is series");
+                        Intent seriesLinkIntent = new Intent(SearchActivity.this, LinkSeriesActivity.class);
+                        seriesLinkIntent.putExtra("ARTIST_URL", artist.getUrl());
+                        seriesLinkIntent.putExtra("ARTIST_NAME", artist.getName());
+                        seriesLinkIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                        seriesLinkIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                        seriesLinkIntent.putExtra("ARTIST_IS_VIDEO", false);
+                        //start the activity
+                        startActivity(seriesLinkIntent);
+                    }
 
                     //fetchSeriesLinkAkwam(artist);
                 }else {
@@ -106,7 +112,8 @@ public class SearchActivity extends AppCompatActivity {
          //   searchOldAkoamLinks(query, false);
          //   getShahid4uLinks(query, false);
          //   searchCima4u(query, false);
-            searchAflamPro(query, false);
+         //   searchAflamPro(query, false);
+            searchFaselHd(query, false);
      //   }
     }
 
@@ -125,9 +132,15 @@ public class SearchActivity extends AppCompatActivity {
         boolean isSeriesCima= artist.getServer().equals(Artist.SERVER_CIMA4U) &&
                 ( n.contains("مسلسل") || n.contains("مسلسلات") || n.contains("انمي"));
 
+        boolean isSeriesAflamPro= artist.getServer().equals(Artist.SERVER_AFLAM_PRO) &&
+                ( u.contains("/serie") ||  n.contains("مسلسل") );
+
+        boolean isSeriesFaselHd= artist.getServer().equals(Artist.SERVER_FASELHD) &&
+                ( u.contains("/seasons") ||  n.contains("مسلسل") );
+
        // boolean isSeriesOldAkwam= artist.getServer().equals(Artist.SERVER_OLD_AKWAM) &&
        //         ( u.contains("مسلسل") || u.contains("مسلسلات"));
-        return isSeriesAkwam || isSeriesShahid || isSeriesCima;
+        return isSeriesAkwam || isSeriesShahid || isSeriesCima || isSeriesAflamPro || isSeriesFaselHd;
     }
 
     /////////////////////////////////////////////////////////////////
@@ -507,6 +520,134 @@ public class SearchActivity extends AppCompatActivity {
                 }
             }
         }).start();
+    }
+
+    //FaselHd
+    private void searchFaselHd(String query, boolean isSeries) {
+        if (!isSeries) {
+            query = "https://www.faselhd.pro/?s=" + query;
+        }
+        final String url = query;
+        Log.i(TAG_FASELHD, "search: "+query);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    Document doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+                    Elements lis = doc.getElementsByClass("postDiv");
+                    for (Element li : lis) {
+                        Log.i(TAG_FASELHD, "element found: ");
+
+                            Artist a = new Artist();
+                            a.setServer(Artist.SERVER_FASELHD);
+                            String link = li.getElementsByAttribute("href").attr("href");
+
+                            String name = li.getElementsByAttribute("alt").attr("alt");
+                            String image = li.getElementsByAttribute("data-src").attr("data-src");
+                        String rate = "";
+                        Elements spans = li.getElementsByTag("span");
+                        for (Element span : spans) {
+                            if (!span.hasAttr("class")){
+                                rate = span.text();
+                                break;
+                            }
+                        }
+
+
+
+                            Log.i(TAG_FASELHD, "Link found: "+link);
+                            Log.i(TAG_FASELHD, "name found: "+name);
+                            Log.i(TAG_FASELHD, "image found: "+image);
+                            Log.i(TAG_FASELHD, "rate found: "+rate);
+
+
+                            a.setName(name);
+                            a.setUrl(link);
+                            a.setImage(image);
+                            a.setRate(rate);
+                            //Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
+
+                            // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+                            SearchActivity.searchResultList.add(a);
+
+                            /*
+
+                             */
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            adapterSearch.notifyDataSetChanged();
+                            //listViewArtists.setAdapter(adapterSearch);
+                        }
+                    });
+                    // adapter.notifyDataSetChanged();
+
+
+                } catch (IOException e) {
+                    //builder.append("Error : ").append(e.getMessage()).append("\n");
+                    Log.i("fail", e.getMessage() + "");
+                }
+            }
+        }).start();
+    }
+
+   public void fetchFaselHdSession(Artist artist){
+       Intent fetchServerIntent = new Intent(SearchActivity.this, FetchServerActivity.class);
+       fetchServerIntent.putExtra("PAGE_NUMBER", 9);  //to fetch goo page = 1
+       if (artist.getUrl().equals("")){
+           fetchServerIntent.putExtra("ARTIST_URL", artist.getUrl());
+       }else{
+           fetchServerIntent.putExtra("ARTIST_URL", artist.getUrl());
+       }
+       fetchServerIntent.putExtra("ARTIST_NAME", artist.getName());
+       fetchServerIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+       fetchServerIntent.putExtra("ARTIST_SERVER", artist.getServer());
+       fetchServerIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+
+       Log.i(TAG, "Fasel         fetchServerIntent.putExtra(\"ARTIST_NAME\", artist.getName());\n&V url:"+artist.getUrl());
+       startActivityForResult(fetchServerIntent, 9);
+   }
+
+    // Call Back method  to get the Message form other Activity
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.i("Returned Result", "method start code:"+requestCode);
+        // check if the request code is same as what is passed  here it is 2
+        if(requestCode == 9)
+        {
+            if (resultCode == RESULT_OK){
+                String serverUrl=data.getStringExtra("result");
+                String serverName = data.getStringExtra("ARTIST_SERVER");
+                String image = data.getStringExtra("ARTIST_IMAGE");
+                String name = data.getStringExtra("ARTIST_NAME");
+                Log.i("Returned Result", serverUrl + "name"+ serverName);
+
+                Log.i("Returned Final", serverUrl + "name"+ serverName);
+                Log.i(TAG, "OnCreate. is series");
+                Intent seriesLinkIntent = new Intent(SearchActivity.this, LinkSeriesActivity.class);
+                seriesLinkIntent.putExtra("ARTIST_URL", serverUrl);
+                seriesLinkIntent.putExtra("ARTIST_NAME", name);
+                seriesLinkIntent.putExtra("ARTIST_IMAGE", image);
+                seriesLinkIntent.putExtra("ARTIST_SERVER", serverName);
+                seriesLinkIntent.putExtra("ARTIST_IS_VIDEO", false);
+                //start the activity
+                startActivity(seriesLinkIntent);
+            }
+            if (resultCode == RESULT_CANCELED){
+                Log.i("Returned Result", "Nothing returned");
+            }
+            Log.i("Returned Result:"+requestCode, "method end resultcode:"+resultCode);
+            //  textView1.setText(message);
+        }
+    }
+
+    public String getWebName(String item){
+        return item.substring(item.indexOf("//")+1, item.indexOf('.'));
     }
 
 }

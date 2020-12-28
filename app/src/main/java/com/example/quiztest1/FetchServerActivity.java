@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 public class FetchServerActivity extends AppCompatActivity {
 
@@ -19,6 +20,7 @@ public class FetchServerActivity extends AppCompatActivity {
     WebView simpleWebView;
     int pageNumber;
     int serverId;
+    private long backPressedTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +71,17 @@ public class FetchServerActivity extends AppCompatActivity {
             Log.i("pageNumer", pageNumber+"");
             fetchShahidOtherServers(artist);
             // shahid(artist);
+        }
+        else if (pageNumber == 7){// fetch video link
+            Log.i("pageNumer", pageNumber+"");
+            fetchVideoLinkAflamPro(artist);
+        }
+        else if (pageNumber == 8){// fetch video link
+            Log.i("pageNumer", pageNumber+"");
+            fetchVideoLinkFaselHd(artist);
+        }else if (pageNumber == 9){// fetch video link
+            Log.i("pageNumer", pageNumber+"");
+            fetchSessionFaselHd(artist);
         }
 
     }
@@ -344,29 +357,9 @@ public class FetchServerActivity extends AppCompatActivity {
         WebViewClient webViewClient = new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // MainActivity.linkTwo = url;
-                //kk     view.loadUrl("");
-
-
-                // Intent data = new Intent();
-                String text = "Result to be returned....";
-//---set the data to pass back---
-                // data.setData(Uri.parse(url));
-                // setResult(RESULT_OK, data);
-//---close the activity---
-                // finish();
-
-                // getIntent().putExtra("URL", url);
-
-
 
                 Log.d("WEBCLIENT 22", "OnreDirect url:"+url);
                 view.loadUrl(url);
-                // if (!url.contains("/download/")){
-
-                //}
-                //     view.destroy();
-                //MainActivity.serverCounts--;
                 return true;
             }
 
@@ -424,6 +417,271 @@ public class FetchServerActivity extends AppCompatActivity {
                         }});
                     view.stopLoading();
                     finish();
+                }
+                //view.loadUrl("javascript:document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString();");
+                //view.loadUrl("javascript:location.replace(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
+            }
+        };
+
+        simpleWebView.setWebViewClient(webViewClient);
+
+        //String url = "https://shahid4u.one/watch/%D9%85%D8%B3%D9%84%D8%B3%D9%84-%D8%A7%D9%84%D8%AC%D8%A7%D8%B3%D9%88%D8%B3-%D8%A7%D9%84%D8%B0%D9%8A-%D8%A7%D8%AD%D8%A8%D9%86%D9%8A-the-spy-who-loved-me-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-14-%D9%85%D8%AA%D8%B1%D8%AC%D9%85%D8%A9";
+
+        simpleWebView.loadUrl(artist.getUrl());
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        //check if waiting time between the second click of back button is greater less than 2 seconds so we finish the app
+        if (backPressedTime + 2000 > System.currentTimeMillis()){
+            finish();
+        }else {
+            Toast.makeText(this, "Press back 2 time to exit", Toast.LENGTH_SHORT).show();
+        }
+        backPressedTime = System.currentTimeMillis();
+    }
+
+
+    public void fetchVideoLinkAflamPro(Artist artist){
+        WebViewClient webViewClient = new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.d("WEBCLIENT 22", "OnreDirect url:"+url);
+               // view.loadUrl(url);
+                return true;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                //kk      view.loadUrl("javascript:window.document.getElementsByClassName(\"serversWatchSide\")[0].children[2].click()");
+                super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                Log.d("WEBCLIENT", "onPageFinished");
+                view.loadUrl("javascript:document.getElementsByClassName(\"Video\")[0].children[0].click();");
+                view.loadUrl("javascript:document.getElementsByClassName(\"Video\")[0].click()");
+            }
+
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                super.onLoadResource(view, url);
+                //   view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+1+"].click()");
+                //view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+MainActivity.serverCounts+"].click()");
+                //view.loadUrl("javascript:window.document.getElementsByClassName(\"download_button\")[0].click()");
+                // view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+1+"].click()");
+                Log.d("WEBCLIENT","onLoadResource url:"+url);
+                if (url.contains("token=")){
+                    //  if (url.contains(".mp4")){
+                    Log.i("yess", "url:"+url);
+                    view.stopLoading();
+                    view.removeView(view);
+                    view.removeAllViews();
+                    simpleWebView.stopLoading();
+                    simpleWebView.removeAllViews();
+
+               /*     String type = "video/*"; // It works for all video application
+                    Uri uri = Uri.parse(url);
+                    Intent in1 = new Intent(Intent.ACTION_VIEW, uri);
+                    in1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    //  in1.setPackage("org.videolan.vlc");
+                    in1.setDataAndType(uri, type);
+                    startActivity(in1);
+
+                */
+
+                   // finish();
+
+
+                  runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Intent resultIntent = new Intent();
+
+                            resultIntent.putExtra("result", url);
+                            Log.i("Result", url);
+                            resultIntent.putExtra("ARTIST_NAME", artist.getName());
+                            resultIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                            resultIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                            resultIntent.putExtra("ARTIST_IS_VIDEO", true);
+
+                            setResult(RESULT_OK, resultIntent);
+                            simpleWebView.removeView(view);
+                            simpleWebView.removeAllViews();
+                            simpleWebView.stopLoading();
+                            finish();
+                        }});
+                }
+                //view.loadUrl("javascript:document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString();");
+                //view.loadUrl("javascript:location.replace(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
+            }
+        };
+
+        simpleWebView.setWebViewClient(webViewClient);
+
+        //String url = "https://shahid4u.one/watch/%D9%85%D8%B3%D9%84%D8%B3%D9%84-%D8%A7%D9%84%D8%AC%D8%A7%D8%B3%D9%88%D8%B3-%D8%A7%D9%84%D8%B0%D9%8A-%D8%A7%D8%AD%D8%A8%D9%86%D9%8A-the-spy-who-loved-me-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-14-%D9%85%D8%AA%D8%B1%D8%AC%D9%85%D8%A9";
+
+        simpleWebView.loadUrl(artist.getUrl());
+    }
+
+    public void fetchVideoLinkFaselHd(Artist artist){
+        WebViewClient webViewClient = new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.d("WEBCLIENT 22", "OnreDirect url:"+url);
+                // view.loadUrl(url);
+                return true;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                //kk      view.loadUrl("javascript:window.document.getElementsByClassName(\"serversWatchSide\")[0].children[2].click()");
+                super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                Log.d("WEBCLIENT", "onPageFinished");
+                view.loadUrl("javascript:document.getElementsByClassName(\"Video\")[0].children[0].click();");
+                view.loadUrl("javascript:document.getElementsByClassName(\"Video\")[0].click()");
+            }
+
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                super.onLoadResource(view, url);
+                //   view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+1+"].click()");
+                //view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+MainActivity.serverCounts+"].click()");
+                //view.loadUrl("javascript:window.document.getElementsByClassName(\"download_button\")[0].click()");
+                // view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+1+"].click()");
+                Log.d("WEBCLIENT","onLoadResource url:"+url);
+                if (url.contains("token=")){
+                    //  if (url.contains(".mp4")){
+                    Log.i("yess", "url:"+url);
+                    view.stopLoading();
+                    view.removeView(view);
+                    view.removeAllViews();
+                    simpleWebView.stopLoading();
+                    simpleWebView.removeAllViews();
+
+               /*     String type = "video/*"; // It works for all video application
+                    Uri uri = Uri.parse(url);
+                    Intent in1 = new Intent(Intent.ACTION_VIEW, uri);
+                    in1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    //  in1.setPackage("org.videolan.vlc");
+                    in1.setDataAndType(uri, type);
+                    startActivity(in1);
+
+                */
+
+                    // finish();
+
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Intent resultIntent = new Intent();
+
+                            resultIntent.putExtra("result", url);
+                            Log.i("Result", url);
+                            resultIntent.putExtra("ARTIST_NAME", artist.getName());
+                            resultIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                            resultIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                            resultIntent.putExtra("ARTIST_IS_VIDEO", true);
+
+                            setResult(RESULT_OK, resultIntent);
+                            simpleWebView.removeView(view);
+                            simpleWebView.removeAllViews();
+                            simpleWebView.stopLoading();
+                            finish();
+                        }});
+                }
+                //view.loadUrl("javascript:document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString();");
+                //view.loadUrl("javascript:location.replace(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
+            }
+        };
+
+        simpleWebView.setWebViewClient(webViewClient);
+
+        //String url = "https://shahid4u.one/watch/%D9%85%D8%B3%D9%84%D8%B3%D9%84-%D8%A7%D9%84%D8%AC%D8%A7%D8%B3%D9%88%D8%B3-%D8%A7%D9%84%D8%B0%D9%8A-%D8%A7%D8%AD%D8%A8%D9%86%D9%8A-the-spy-who-loved-me-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-14-%D9%85%D8%AA%D8%B1%D8%AC%D9%85%D8%A9";
+
+        simpleWebView.loadUrl(artist.getUrl());
+    }
+
+    public void fetchSessionFaselHd(Artist artist){
+        WebViewClient webViewClient = new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.d("WEBCLIENT 22", "OnreDirect url:"+url);
+                // view.loadUrl(url);
+                return true;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                //kk      view.loadUrl("javascript:window.document.getElementsByClassName(\"serversWatchSide\")[0].children[2].click()");
+                super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                Log.d("WEBCLIENT", "onPageFinished");
+                view.loadUrl("javascript:document.getElementsByClassName(\"Video\")[0].children[0].click();");
+                view.loadUrl("javascript:https://www.faselhd.pro/series-ajax/?_action=get_season_list&_post_id=17213");
+            }
+
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                super.onLoadResource(view, url);
+                //   view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+1+"].click()");
+                //view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+MainActivity.serverCounts+"].click()");
+                //view.loadUrl("javascript:window.document.getElementsByClassName(\"download_button\")[0].click()");
+                // view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+1+"].click()");
+                Log.d("WEBCLIENT","onLoadResource url:"+url);
+                if (url.contains("token=")){
+                    //  if (url.contains(".mp4")){
+                    Log.i("yess", "url:"+url);
+                    view.stopLoading();
+                    view.removeView(view);
+                    view.removeAllViews();
+                    simpleWebView.stopLoading();
+                    simpleWebView.removeAllViews();
+
+               /*     String type = "video/*"; // It works for all video application
+                    Uri uri = Uri.parse(url);
+                    Intent in1 = new Intent(Intent.ACTION_VIEW, uri);
+                    in1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    //  in1.setPackage("org.videolan.vlc");
+                    in1.setDataAndType(uri, type);
+                    startActivity(in1);
+
+                */
+
+                    // finish();
+
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Intent resultIntent = new Intent();
+
+                            resultIntent.putExtra("result", url);
+                            Log.i("Result", url);
+                            resultIntent.putExtra("ARTIST_NAME", artist.getName());
+                            resultIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                            resultIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                            resultIntent.putExtra("ARTIST_IS_VIDEO", true);
+
+                            setResult(RESULT_OK, resultIntent);
+                            simpleWebView.removeView(view);
+                            simpleWebView.removeAllViews();
+                            simpleWebView.stopLoading();
+                            finish();
+                        }});
                 }
                 //view.loadUrl("javascript:document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString();");
                 //view.loadUrl("javascript:location.replace(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");

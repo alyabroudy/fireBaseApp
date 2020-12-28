@@ -191,11 +191,42 @@ public class ServersListActivity extends AppCompatActivity {
                         Log.i("video started", uri.toString() + "");
                         startActivity(videoIntent);
                     }
-                }else {
+                }else if (artist.getServer().equals(Artist.SERVER_AFLAM_PRO)){
+                    String type = "video/*"; // It works for all video application
+                    // }
+
+                    String url = artist.getUrl().trim().replace(" ", "");
+                    //  url = url.replace("/video.mp4", "");
+                    Uri uri = Uri.parse(url + "");
+                    Intent videoIntent = new Intent(Intent.ACTION_VIEW, uri);
+                    videoIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    //  in1.setPackage("org.videolan.vlc");
+                    videoIntent.setDataAndType(uri, type);
+                    Log.i("video started", uri.toString() + "");
+                    startActivity(videoIntent);
+            }else if (artist.getServer().equals(Artist.SERVER_FASELHD)){
+                    String type = "video/*"; // It works for all video application
+                    // }
+
+                    String url = artist.getUrl().trim().replace(" ", "");
+                    //  url = url.replace("/video.mp4", "");
+                    Uri uri = Uri.parse(url + "");
+                    Intent videoIntent = new Intent(Intent.ACTION_VIEW, uri);
+                    videoIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    //  in1.setPackage("org.videolan.vlc");
+                    videoIntent.setDataAndType(uri, type);
+                    Log.i("video started", uri.toString() + "");
+                    startActivity(videoIntent);
+                }
+                else {
                     fetchLinkAndVideoOldAkwam(artist);
                 }
             }
         });
+
+
+
+        start();
 
      /*   if (artist.getServer().equals(Artist.SERVER_AKWAM)){
             fetchOneLinkAkwam(artist);
@@ -210,7 +241,7 @@ public class ServersListActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        start();
+       // start();
     }
 
 
@@ -242,6 +273,16 @@ public class ServersListActivity extends AppCompatActivity {
                 }else {
                     fetchOneLinkCima4u(artist, "");
                 }
+            }
+        else if (artist.getServer().equals(Artist.SERVER_AFLAM_PRO)){
+            if (artist.getIsVideo()){
+               // fetchOnePageLinkCima4u(artist);
+            }else {
+                fetchOneLinkAflamPro(artist, "");
+            }
+        }
+            else if (artist.getServer().equals(Artist.SERVER_FASELHD)){
+                    fetchOneLinkFaselHd(artist, "");
             }
             else {
                 fetchSeriesLinkOldAkwam(artist);
@@ -577,6 +618,62 @@ public class ServersListActivity extends AppCompatActivity {
         }
 
         else  if(requestCode == 5 || requestCode == 6)
+        {
+            if (resultCode == RESULT_OK){
+                String serverUrl=data.getStringExtra("result");
+                String serverName = data.getStringExtra("ARTIST_SERVER");
+                String image = data.getStringExtra("ARTIST_IMAGE");
+                String aName = getWebName(serverUrl);
+                boolean isVideo = data.getBooleanExtra("ARTIST_IS_VIDEO", true);
+                Log.i("Returned Result", serverUrl + "name"+ serverName);
+                Artist a = new Artist();
+                a.setName(aName);
+                a.setImage(image);
+                a.setIsVideo(isVideo);
+                a.setUrl(serverUrl);
+                a.setServer(serverName);
+                Log.i("Returned Final", serverUrl + "name"+ serverName);
+                ServersListActivity.serversArtistList.add(a);
+                adapterServersList.notifyDataSetChanged();
+                listViewArtists.setAdapter(adapterServersList);
+
+            }
+            if (resultCode == RESULT_CANCELED){
+                Log.i("Returned Result", "Nothing returned");
+            }
+            Log.i("Returned Result:"+requestCode, "method end resultcode:"+resultCode);
+            //  textView1.setText(message);
+        }
+
+        else  if(requestCode == 7)
+        {
+            if (resultCode == RESULT_OK){
+                String serverUrl=data.getStringExtra("result");
+                String serverName = data.getStringExtra("ARTIST_SERVER");
+                String image = data.getStringExtra("ARTIST_IMAGE");
+                String aName = getWebName(serverUrl);
+                boolean isVideo = data.getBooleanExtra("ARTIST_IS_VIDEO", true);
+                Log.i("Returned Result", serverUrl + "name"+ serverName);
+                Artist a = new Artist();
+                a.setName(aName);
+                a.setImage(image);
+                a.setIsVideo(isVideo);
+                a.setUrl(serverUrl);
+                a.setServer(serverName);
+                Log.i("Returned Final", serverUrl + "name"+ serverName);
+                ServersListActivity.serversArtistList.add(a);
+                adapterServersList.notifyDataSetChanged();
+                listViewArtists.setAdapter(adapterServersList);
+
+            }
+            if (resultCode == RESULT_CANCELED){
+                Log.i("Returned Result", "Nothing returned");
+            }
+            Log.i("Returned Result:"+requestCode, "method end resultcode:"+resultCode);
+            //  textView1.setText(message);
+        }
+
+        else  if(requestCode == 8)
         {
             if (resultCode == RESULT_OK){
                 String serverUrl=data.getStringExtra("result");
@@ -1026,6 +1123,7 @@ public class ServersListActivity extends AppCompatActivity {
         startActivityForResult(fetchServerIntent, 3);
     }
 
+
     public void fetchOnePageLinkCima4u(Artist artist){
         new Thread(new Runnable() {
             @Override
@@ -1075,6 +1173,44 @@ public class ServersListActivity extends AppCompatActivity {
         }).start();
     }
 
+
+    //AflamPro
+    public void fetchOneLinkAflamPro(Artist artist, String url){
+        Intent fetchServerIntent = new Intent(ServersListActivity.this, FetchServerActivity.class);
+        fetchServerIntent.putExtra("PAGE_NUMBER", 7);  //to fetch goo page = 1
+        if (url.equals("")){
+            fetchServerIntent.putExtra("ARTIST_URL", artist.getUrl());
+        }else{
+            fetchServerIntent.putExtra("ARTIST_URL", url);
+        }
+        fetchServerIntent.putExtra("ARTIST_NAME", artist.getName());
+        fetchServerIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+        fetchServerIntent.putExtra("ARTIST_SERVER", artist.getServer());
+        fetchServerIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+
+        Log.i(TAG, "AflamPro         fetchServerIntent.putExtra(\"ARTIST_NAME\", artist.getName());\n&V url:"+artist.getUrl());
+        startActivityForResult(fetchServerIntent, 7);
+        //startActivity(fetchServerIntent);
+    }
+
+    //FaselHd
+    public void fetchOneLinkFaselHd(Artist artist, String url){
+        Intent fetchServerIntent = new Intent(ServersListActivity.this, FetchServerActivity.class);
+        fetchServerIntent.putExtra("PAGE_NUMBER", 8);  //to fetch goo page = 1
+        if (url.equals("")){
+            fetchServerIntent.putExtra("ARTIST_URL", artist.getUrl());
+        }else{
+            fetchServerIntent.putExtra("ARTIST_URL", url);
+        }
+        fetchServerIntent.putExtra("ARTIST_NAME", artist.getName());
+        fetchServerIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+        fetchServerIntent.putExtra("ARTIST_SERVER", artist.getServer());
+        fetchServerIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+
+        Log.i(TAG, "Fasel         fetchServerIntent.putExtra(\"ARTIST_NAME\", artist.getName());\n&V url:"+artist.getUrl());
+        startActivityForResult(fetchServerIntent, 8);
+        //startActivity(fetchServerIntent);
+    }
 
     /*
 

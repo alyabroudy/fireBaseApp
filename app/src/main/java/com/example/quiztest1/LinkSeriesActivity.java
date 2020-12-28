@@ -30,6 +30,8 @@ public class LinkSeriesActivity extends AppCompatActivity {
     String TAG_AKWAM = "Akwam";
     String TAG = "LinkSeries";
     String TAG_CIMA4U = "Cima4u";
+    String TAG_AFLAM_PRO = "AflamPro";
+    String TAG_FASELHD = "FaselHd";
     ArtistList adapterSeries;
     static List<Artist> seriesArtistList;
    // ImageView imageView;
@@ -101,6 +103,13 @@ public class LinkSeriesActivity extends AppCompatActivity {
             }else if (artist.getServer().equals(Artist.SERVER_CIMA4U)){
                 Log.i(TAG, "start cima series");
                 fetchSeriesLinkCima4u(artist);
+            }else if (artist.getServer().equals(Artist.SERVER_AFLAM_PRO)){
+                Log.i(TAG, "start aflamPro series");
+                fetchSeriesLinkAflamPro(artist);
+            }
+            else if (artist.getServer().equals(Artist.SERVER_FASELHD)){
+                Log.i(TAG, "start FaselHd series");
+                fetchSeriesLinkFaselHd(artist);
             }
         }
     }
@@ -306,6 +315,150 @@ public class LinkSeriesActivity extends AppCompatActivity {
         Log.i("akwam getLinks", "end");
     }
 
+    //AflamPro
+    private void fetchSeriesLinkAflamPro(final Artist artist){
+        Log.i(TAG_AFLAM_PRO, "fetchSeries url:"+artist.getUrl());
 
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String url = artist.getUrl();
+                    Log.i(TAG_AFLAM_PRO, "ur:"+url);
+                    Document doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+
+
+                    //fetch description
+                    doc.getElementsByClass("Description").select("h4").remove();
+                    doc.getElementsByClass("Description").select("h4").remove();
+
+                   String   description = doc.getElementsByClass("Description").html().replaceAll("\\<.*?\\>", "");
+
+
+
+                    //fetch session
+                    Elements boxs = doc.getElementsByClass("Wdgt AABox");
+                    Log.i("Count", "boxs:"+boxs.size());
+                    int sessionCounter= 1;
+                    for (Element box : boxs) {
+                        String title = "الموسم " + sessionCounter;
+                       // String title = box.getElementsByClass("Title AA-Season On").html();
+                        //get link of episodes page
+                        Elements divs = box.getElementsByTag("tr");
+                        for (Element div : divs) {
+
+                            String link = div.getElementsByAttribute("href").attr("href");
+                            Log.i(TAG_AFLAM_PRO, "Episode url found:"+link);
+
+                            String image = div.getElementsByAttribute("src").attr("src");
+
+                            if (image.equals("")){
+                                String   image2 = div.getElementsByClass("cnv cnv2").html();
+                                Log.i(TAG_AFLAM_PRO, "Episode image2 found:"+image2);
+                                image2 = image2.substring(image2.indexOf("https"));
+                                image = image2.substring(0, image2.indexOf('"'));
+
+                            }
+                            Log.i(TAG_AFLAM_PRO, "Episode image found:"+image);
+
+                            String name = artist.getName();
+                            Elements namesDivs = div.getElementsByClass("MvTbTtl");
+                            for (Element nameDiv : namesDivs) {
+                                name = nameDiv.getElementsByAttribute("href").text() + " - "+ title;
+                                break;
+                            }
+                            Log.i(TAG_AFLAM_PRO, "Episode name found:"+name);
+                            Artist a = new Artist();
+                            a.setName(name);
+                            a.setUrl(link);
+                            a.setServer(Artist.SERVER_AFLAM_PRO);
+                            a.setImage(image);
+                            LinkSeriesActivity.seriesArtistList.add(a);
+                        }
+                        sessionCounter++;
+                    }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //Collections.reverse(LinkSeriesActivity.seriesArtistList);
+                            textViewDesc.setText(description);
+                            adapterSeries.notifyDataSetChanged();
+                            listViewArtists.setAdapter(adapterSeries);
+                            //listViewArtists.setAdapter(adapter);
+                        }});
+                } catch (IOException e) {
+                    Log.i("fail", e.getMessage()+"");
+                }
+
+            }
+        }).start();
+        Log.i(TAG_AFLAM_PRO, "FetchSeriesLink end");
+    }
+
+    //FaselHd
+    private void fetchSeriesLinkFaselHd(final Artist artist){
+        Log.i(TAG_FASELHD, "fetchSeries url:"+artist.getUrl());
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String url = artist.getUrl();
+                    Log.i(TAG_FASELHD, "ur:"+url);
+                    Document doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+
+
+                    //fetch description
+
+                   String   description = doc.getElementsByClass("singleDesc").html().replaceAll("\\<.*?\\>", "");
+
+
+
+                    //fetch session
+                    Elements boxs = doc.getElementsByClass("seasonDiv active");
+                    Log.i("Count", "boxs:"+boxs.size());
+                    for (Element box : boxs) {
+                        String title = box.getElementsByClass("title").text();
+                        String image = box.getElementsByAttribute("data-src").attr("data-src");
+                        // String title = box.getElementsByClass("Title AA-Season On").html();
+                        //get link of episodes page
+                        Elements divs = doc.getElementById("epAll").getElementsByAttribute("href");
+                        for (Element div : divs) {
+
+                            String link = div.attr("href");
+                            Log.i(TAG_FASELHD, "Episode url found:"+link);
+
+
+                            String name = div.text();
+                            Log.i(TAG_FASELHD, "Episode name found:"+name);
+                            Artist a = new Artist();
+                            a.setName(name);
+                            a.setUrl(link);
+                            a.setServer(Artist.SERVER_FASELHD);
+                            a.setImage(image);
+                            LinkSeriesActivity.seriesArtistList.add(a);
+                        }
+                    }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //Collections.reverse(LinkSeriesActivity.seriesArtistList);
+                            textViewDesc.setText(description);
+                            adapterSeries.notifyDataSetChanged();
+                            listViewArtists.setAdapter(adapterSeries);
+                            //listViewArtists.setAdapter(adapter);
+                        }});
+                } catch (IOException e) {
+                    Log.i("fail", e.getMessage()+"");
+                }
+
+            }
+        }).start();
+        Log.i(TAG_FASELHD, "FetchSeriesLink end");
+    }
 
 }
