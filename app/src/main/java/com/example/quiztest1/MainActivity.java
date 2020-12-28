@@ -235,15 +235,6 @@ public class MainActivity extends AppCompatActivity {
         if (backPressedTime + 2000 > System.currentTimeMillis()){
             finish();
         }else {
-            /*
-            if (adapter.getArtistList() == MainActivity.resolutionsList){
-                listViewArtists.setAdapter(adapterResult);
-            }else if (adapter.getArtistList() == MainActivity.resultList){
-                listViewArtists.setAdapter(adapter);
-            }else {
-                Toast.makeText(this, "Press back 2 time to exit", Toast.LENGTH_SHORT).show();
-            }
-            */
             Toast.makeText(this, "Press back 2 time to exit", Toast.LENGTH_SHORT).show();
         }
         backPressedTime = System.currentTimeMillis();
@@ -252,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        start();
+      //  start();
     }
 
     private boolean isSeriesLink(Artist artist){

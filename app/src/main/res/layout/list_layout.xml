@@ -36,5 +36,12 @@
         android:layout_below="@id/textViewUrl"
         android:layout_toEndOf="@+id/imageView"
          />
+    <TextView
+        android:id="@+id/textViewRate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textViewGenre"
+        android:layout_toEndOf="@+id/imageView"
+        />
 
 </RelativeLayout>

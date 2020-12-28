@@ -29,6 +29,7 @@ public class SearchActivity extends AppCompatActivity {
     String query;
     String TAG_AKWAM = "Akwam";
     String TAG_CIMA4U = "Cima4u";
+    String TAG_AFLAM_PRO = "AflamPro";
     static List<Artist> searchResultList;
     ArtistList adapterSearch;
 
@@ -101,10 +102,11 @@ public class SearchActivity extends AppCompatActivity {
     public void start(){
      //   if (null == SearchActivity.searchResultList || SearchActivity.searchResultList.isEmpty()){
             listViewArtists.setAdapter(adapterSearch);
-            searchAkwam(query, false);
-            searchOldAkoamLinks(query, false);
-            getShahid4uLinks(query, false);
-            searchCima4u(query, false);
+         //   searchAkwam(query, false);
+         //   searchOldAkoamLinks(query, false);
+         //   getShahid4uLinks(query, false);
+         //   searchCima4u(query, false);
+            searchAflamPro(query, false);
      //   }
     }
 
@@ -423,6 +425,70 @@ public class SearchActivity extends AppCompatActivity {
                         /*
 
                          */
+                        }
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            adapterSearch.notifyDataSetChanged();
+                            //listViewArtists.setAdapter(adapterSearch);
+                        }
+                    });
+                    // adapter.notifyDataSetChanged();
+
+
+                } catch (IOException e) {
+                    //builder.append("Error : ").append(e.getMessage()).append("\n");
+                    Log.i("fail", e.getMessage() + "");
+                }
+            }
+        }).start();
+    }
+
+    //aflamPro
+    private void searchAflamPro(String query, boolean isSeries) {
+        if (!isSeries) {
+            query = "https://aflampro.com/?s=" + query;
+        }
+        final String url = query;
+        Log.i(TAG_AFLAM_PRO, "search: "+query);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    Document doc = Jsoup.connect(url).get();
+                    //Elements links = doc.select("a[href]");
+                    Elements lis = doc.select("li[class]");
+                    for (Element li : lis) {
+                        Log.i(TAG_AFLAM_PRO, "element found: ");
+                        if (li.hasClass("TPostMv")) {
+                            Artist a = new Artist();
+                            a.setServer(Artist.SERVER_AFLAM_PRO);
+                            String link = li.getElementsByAttribute("href").attr("href");
+
+                            String name = li.getElementsByClass("Title").text();
+                            String image = li.getElementsByAttribute("src").attr("src");
+                            String rate = li.getElementsByClass("Vote AAIco-star").text();
+
+                            Log.i(TAG_AFLAM_PRO, "Link found: "+link);
+                            Log.i(TAG_AFLAM_PRO, "name found: "+name);
+                            Log.i(TAG_AFLAM_PRO, "image found: "+image);
+                            Log.i(TAG_AFLAM_PRO, "rate found: "+rate);
+
+
+                            a.setName(name);
+                            a.setUrl(link);
+                            a.setImage(image);
+                            a.setRate(rate);
+                            //Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
+
+                            // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+                            SearchActivity.searchResultList.add(a);
+
+                            /*
+
+                             */
                         }
                     }
                     runOnUiThread(new Runnable() {
