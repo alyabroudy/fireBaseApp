@@ -13,19 +13,21 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+        <activity android:name=".SessionsActivity"></activity>
         <activity
             android:name=".LinkSeriesActivity"
             android:label="الحلقات" />
         <activity
             android:name=".ServersListActivity"
-            android:label="سيرفرات المشاهده"
-            android:hardwareAccelerated="true"/>
-        <activity android:name=".FetchServerActivity"
-            android:hardwareAccelerated="true"/>
+            android:hardwareAccelerated="true"
+            android:label="سيرفرات المشاهده" />
+        <activity
+            android:name=".FetchServerActivity"
+            android:hardwareAccelerated="true" />
         <activity
             android:name=".VideoResolutionActivity"
-    android:hardwareAccelerated="true"
-    android:label="مشاهدة" />
+            android:hardwareAccelerated="true"
+            android:label="مشاهدة" />
         <activity
             android:name=".SearchActivity"
             android:label="نتائج البحث" />
@@ -34,6 +36,7 @@
             android:label="عمر فلكس">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

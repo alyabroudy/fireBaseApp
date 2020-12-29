@@ -108,12 +108,12 @@ public class SearchActivity extends AppCompatActivity {
     public void start(){
      //   if (null == SearchActivity.searchResultList || SearchActivity.searchResultList.isEmpty()){
             listViewArtists.setAdapter(adapterSearch);
-         //   searchAkwam(query, false);
-         //   searchOldAkoamLinks(query, false);
-         //   getShahid4uLinks(query, false);
-         //   searchCima4u(query, false);
-         //   searchAflamPro(query, false);
-            searchFaselHd(query, false);
+            searchAkwam(query, false);
+            searchOldAkoamLinks(query, false);
+        searchFaselHd(query, false);
+        getShahid4uLinks(query, false);
+        searchCima4u(query, false);
+        //   searchAflamPro(query, false);
      //   }
     }
 
@@ -595,59 +595,16 @@ public class SearchActivity extends AppCompatActivity {
     }
 
    public void fetchFaselHdSession(Artist artist){
-       Intent fetchServerIntent = new Intent(SearchActivity.this, FetchServerActivity.class);
-       fetchServerIntent.putExtra("PAGE_NUMBER", 9);  //to fetch goo page = 1
-       if (artist.getUrl().equals("")){
-           fetchServerIntent.putExtra("ARTIST_URL", artist.getUrl());
-       }else{
-           fetchServerIntent.putExtra("ARTIST_URL", artist.getUrl());
-       }
-       fetchServerIntent.putExtra("ARTIST_NAME", artist.getName());
-       fetchServerIntent.putExtra("ARTIST_IMAGE", artist.getImage());
-       fetchServerIntent.putExtra("ARTIST_SERVER", artist.getServer());
-       fetchServerIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+       Intent fetchSessionsIntent = new Intent(SearchActivity.this, SessionsActivity.class);
+
+       fetchSessionsIntent.putExtra("ARTIST_NAME", artist.getName());
+       fetchSessionsIntent.putExtra("ARTIST_URL", artist.getUrl());
+       fetchSessionsIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+       fetchSessionsIntent.putExtra("ARTIST_SERVER", artist.getServer());
+       fetchSessionsIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
 
        Log.i(TAG, "Fasel         fetchServerIntent.putExtra(\"ARTIST_NAME\", artist.getName());\n&V url:"+artist.getUrl());
-       startActivityForResult(fetchServerIntent, 9);
+       startActivity(fetchSessionsIntent);
    }
-
-    // Call Back method  to get the Message form other Activity
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.i("Returned Result", "method start code:"+requestCode);
-        // check if the request code is same as what is passed  here it is 2
-        if(requestCode == 9)
-        {
-            if (resultCode == RESULT_OK){
-                String serverUrl=data.getStringExtra("result");
-                String serverName = data.getStringExtra("ARTIST_SERVER");
-                String image = data.getStringExtra("ARTIST_IMAGE");
-                String name = data.getStringExtra("ARTIST_NAME");
-                Log.i("Returned Result", serverUrl + "name"+ serverName);
-
-                Log.i("Returned Final", serverUrl + "name"+ serverName);
-                Log.i(TAG, "OnCreate. is series");
-                Intent seriesLinkIntent = new Intent(SearchActivity.this, LinkSeriesActivity.class);
-                seriesLinkIntent.putExtra("ARTIST_URL", serverUrl);
-                seriesLinkIntent.putExtra("ARTIST_NAME", name);
-                seriesLinkIntent.putExtra("ARTIST_IMAGE", image);
-                seriesLinkIntent.putExtra("ARTIST_SERVER", serverName);
-                seriesLinkIntent.putExtra("ARTIST_IS_VIDEO", false);
-                //start the activity
-                startActivity(seriesLinkIntent);
-            }
-            if (resultCode == RESULT_CANCELED){
-                Log.i("Returned Result", "Nothing returned");
-            }
-            Log.i("Returned Result:"+requestCode, "method end resultcode:"+resultCode);
-            //  textView1.setText(message);
-        }
-    }
-
-    public String getWebName(String item){
-        return item.substring(item.indexOf("//")+1, item.indexOf('.'));
-    }
 
 }
