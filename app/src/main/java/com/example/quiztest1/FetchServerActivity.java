@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
@@ -20,6 +21,8 @@ public class FetchServerActivity extends AppCompatActivity {
     WebView simpleWebView;
     int pageNumber;
     int serverId;
+    String shahidExclude;
+    String shahidPageUrl;
     private long backPressedTime;
 
     @Override
@@ -40,6 +43,8 @@ public class FetchServerActivity extends AppCompatActivity {
 
         severListIntent= getIntent();
         artist = new Artist();
+        shahidExclude=severListIntent.getStringExtra("EXCLUDED");
+        shahidPageUrl=severListIntent.getStringExtra("PAGE_URL");
         artist.setUrl(severListIntent.getStringExtra("ARTIST_URL"));
         artist.setName(severListIntent.getStringExtra("ARTIST_NAME"));
         artist.setImage(severListIntent.getStringExtra("ARTIST_IMAGE"));
@@ -62,12 +67,12 @@ public class FetchServerActivity extends AppCompatActivity {
             Log.i("pageNumer", pageNumber+"");
             fetchVideoLinkCima4u(artist);
         }
-        else if (pageNumber == 4){// fetch video link
+        else if (pageNumber == 4){// fetch video link for vidHd but already overwritten
             Log.i("pageNumer", pageNumber+"");
             fetchVidHdVideo(artist);
            // shahid(artist);
         }
-        else if (pageNumber == 5){// fetch video link
+        else if (pageNumber == 5){// fetch Shahid other servers
             Log.i("pageNumer", pageNumber+"");
             fetchShahidOtherServers(artist);
             // shahid(artist);
@@ -88,61 +93,101 @@ public class FetchServerActivity extends AppCompatActivity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 Log.d("WEBCLIENT 22", "OnreDirect url:"+url);
-                return true;
+                return false;
             }
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                FetchServerActivity.shahidServersCounter = 2;
+                view.evaluateJavascript("(function() { var x = document.getElementsByClassName(\"servers-list\")[0].children;x[1].innerHTML = \"Hello World!\"; x[1].click(); return document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString();})();", new ValueCallback<String>() {
+                    //   view.evaluateJavascript("(function() { return document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString();})();", new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String s) {
+                        Log.d("LogName", s); // Prints the string 'null' NOT Java null
+                    }
+                });
                 super.onPageStarted(view, url, favicon);
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
-                view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+serverId+"].click()");
                 super.onPageFinished(view, url);
+                view.evaluateJavascript("(function() { return document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString();})();", new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String s) {
+                        Log.d("LogName", s); // Prints the string 'null' NOT Java null
+                    }
+                });
+                //ok      view.evaluateJavascript("(function() { var x = document.getElementsByClassName(\"sever_link\"); x[1].innerHTML = \"Hello World!\"; return document.title;})();", new ValueCallback<String>() {
                 Log.d("WEBCLIENT", "onPageFinished");
-                }
+                view.evaluateJavascript("(function() { var x = document.getElementsByClassName(\"servers-list\")[0].children;x["+serverId+"].innerHTML = \"Hello World!\"; x["+serverId+"].click(); return document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString();})();", new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String s) {
+                        Log.d("LogName", s); // Prints the string 'null' NOT Java null
+                    }
+                });
+            }
 
             @Override
             public void onLoadResource(WebView view, String url) {
                 super.onLoadResource(view, url);
                 Log.d("WEBCLIENT","onLoadResource url:"+url);
-                if (url.contains("/embed") || url.contains("videoembed")){
-                    //   if (url.contains(".mp4")){
+                if (url.contains(shahidExclude)){return;}
+                if (url.contains("vidbom.com/embed")
+                        || url.contains("vidhd.net/embed")
+                        || url.contains("ok.ru/videoembed")
+                        || url.contains("vidshar.net/embed")
+                        || url.contains("watchers.to/embed")
+                        || url.contains("doodstream.com/e/")
+                        || url.contains("estream.to/embed")
+                        || url.contains("streamango.com/embed")
+                        || url.contains("verystream.com/e/")
+                        || url.contains("openload.co/embed/")
+                        || url.contains("uptostream.com/iframe")
+                        || url.contains("videowood.tv/embed")
+                        || url.contains("uqload.com/embed")
+                        || url.contains("flashx.tv/embed")
+                        || url.contains("mixdrop.co/e/")
+                        || url.contains("videorev.cc/embed")
+                        || url.contains("streamin.to/embed")
+                        || url.contains("embed.mystream.to/")
+                        || url.contains("vidzi.tv/embed")
+                        || url.contains("thevideo.me/embed")
+                        || url.contains("thevid.tv/e/")
+                        || url.contains("vidoza.net/embed")
+                        || url.contains("videobin.co/embed")
+                        || url.contains("jawcloud.co/embed")
+                        || url.contains("cloudvideo.tv/embed")
+                        || url.contains("rapidvideo.com/e/")){
                     Log.i("yess", "url:"+url);
 
-                    if (FetchServerActivity.shahidServersCounter == 0) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
+                    view.stopLoading();
+                    view.removeAllViews();
+                    simpleWebView.removeAllViews();
+                    simpleWebView.stopLoading();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Intent resultIntent = new Intent();
 
-                                Intent resultIntent = new Intent();
-
-                                resultIntent.putExtra("result", url);
-                                resultIntent.putExtra("ARTIST_NAME", artist.getName());
-                                resultIntent.putExtra("ARTIST_IMAGE", artist.getImage());
-                                resultIntent.putExtra("ARTIST_SERVER", artist.getServer());
-                                resultIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
-
-                                setResult(RESULT_OK, resultIntent);
-                                simpleWebView.removeView(view);
-                                simpleWebView.removeAllViews();
-                                //  simpleWebView.loadUrl(" ");
-                                simpleWebView.stopLoading();
-                                finish();
-                            }
-                        });
-                        view.stopLoading();
-                        finish();
-                    }
-                    FetchServerActivity.shahidServersCounter--;
+                            resultIntent.putExtra("result", url);
+                            resultIntent.putExtra("ARTIST_NAME", artist.getName());
+                            resultIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                            resultIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                            resultIntent.putExtra("PAGE_URL", shahidPageUrl);
+                            resultIntent.putExtra("EXCLUDED", shahidExclude);
+                            resultIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                            resultIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+                            setResult(RESULT_OK, resultIntent);
+                            simpleWebView.removeView(view);
+                            simpleWebView.removeAllViews();
+                            simpleWebView.stopLoading();
+                            finish();
+                        }
+                    });
                 }
             }
         };
-
         simpleWebView.setWebViewClient(webViewClient);
-
         simpleWebView.loadUrl(artist.getUrl());
     }
 
