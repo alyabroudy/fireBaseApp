@@ -26,6 +26,7 @@ public class SessionsActivity extends AppCompatActivity {
     ListView listViewArtists;
     Intent sessionsListIntent;
     String TAG_FASELHD= "FaselHd";
+    String TAG_MYCIMA= "MyCima";
     String TAG = "SessionsActivity";
 
     @Override
@@ -65,7 +66,11 @@ public class SessionsActivity extends AppCompatActivity {
     }
 
     public void start(){
-        searchFaselHd(artist);
+        if (artist.getServer().equals(Artist.SERVER_FASELHD)){
+            searchFaselHd(artist);
+        }else {
+            fetchSessionsLinkMyCima(artist);
+        }
     }
 
     private void searchFaselHd(Artist artist) {
@@ -132,5 +137,73 @@ public class SessionsActivity extends AppCompatActivity {
                 }
             }
         }).start();
+    }
+
+    private void fetchSessionsLinkMyCima(final Artist artist){
+        Log.i(TAG_MYCIMA, "fetchSeries url:"+artist.getUrl());
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String url = artist.getUrl();
+                    Log.i(TAG_MYCIMA, "ur:"+url);
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(0).get();
+                    //Elements links = doc.select("a[href]");
+
+                    //get link of episodes page
+                    String desc = doc.getElementsByClass("PostItemContent").text();
+
+                    //fetch session
+                    Elements boxs = doc.getElementsByClass("List--Seasons--Episodes");
+
+                    if (boxs.isEmpty()){
+                        Log.i(TAG_MYCIMA, "isEmpty");
+                        Intent seriesLinkIntent = new Intent(SessionsActivity.this, LinkSeriesActivity.class);
+                        seriesLinkIntent.putExtra("ARTIST_URL", artist.getUrl());
+                        seriesLinkIntent.putExtra("ARTIST_NAME", artist.getName());
+                        seriesLinkIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                        seriesLinkIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                        seriesLinkIntent.putExtra("ARTIST_IS_VIDEO", false);
+                        //start the activity
+                        startActivity(seriesLinkIntent);
+                        return;
+                    }
+
+                    for (Element box: boxs){
+
+                        Elements lis = box.getElementsByTag("a");
+
+
+                        Log.i(TAG_MYCIMA, "not empty"+lis.size());
+                        Log.i("Count", "boxs:"+boxs.size());
+                        for (Element li : lis) {
+                            String title = li.text();
+                            String link = li.attr("href");
+
+                            Artist a = new Artist();
+                            a.setName(title);
+                            a.setUrl(link);
+                            a.setServer(Artist.SERVER_MyCima);
+                            a.setImage(artist.getImage());
+                            SessionsActivity.sessionsList.add(a);
+                        }
+                    }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //Collections.reverse(LinkSeriesActivity.seriesArtistList);
+                            adapterSearch.notifyDataSetChanged();
+                            listViewArtists.setAdapter(adapterSearch);
+                            //listViewArtists.setAdapter(adapter);
+                        }});
+                } catch (IOException e) {
+                    Log.i("fail", e.getMessage()+"");
+                }
+
+            }
+        }).start();
+        Log.i(TAG_MYCIMA, "FetchSeriesLink end");
     }
 }

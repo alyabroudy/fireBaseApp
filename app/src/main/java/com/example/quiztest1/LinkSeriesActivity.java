@@ -32,6 +32,7 @@ public class LinkSeriesActivity extends AppCompatActivity {
     String TAG_CIMA4U = "Cima4u";
     String TAG_AFLAM_PRO = "AflamPro";
     String TAG_FASELHD = "FaselHd";
+    String TAG_MYCIMA = "MyCima";
     ArtistList adapterSeries;
     static List<Artist> seriesArtistList;
    // ImageView imageView;
@@ -111,6 +112,10 @@ public class LinkSeriesActivity extends AppCompatActivity {
                 Log.i(TAG, "start FaselHd series");
                 fetchSeriesLinkFaselHd(artist);
             }
+            else if (artist.getServer().equals(Artist.SERVER_MyCima)){
+                Log.i(TAG, "start MyCima series");
+                fetchSeriesLinkMyCima(artist);
+            }
         }
     }
 
@@ -127,7 +132,7 @@ public class LinkSeriesActivity extends AppCompatActivity {
                 try {
                     Log.i(TAG_AKWAM, "FetchSeriesLink url:"+url);
 
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
 
                     //description
                     Elements decDivs = doc.select("h2");
@@ -448,6 +453,60 @@ public class LinkSeriesActivity extends AppCompatActivity {
                         public void run() {
                             //Collections.reverse(LinkSeriesActivity.seriesArtistList);
                             textViewDesc.setText(description);
+                            adapterSeries.notifyDataSetChanged();
+                            listViewArtists.setAdapter(adapterSeries);
+                            //listViewArtists.setAdapter(adapter);
+                        }});
+                } catch (IOException e) {
+                    Log.i("fail", e.getMessage()+"");
+                }
+
+            }
+        }).start();
+        Log.i(TAG_FASELHD, "FetchSeriesLink end");
+    }
+
+    //MyCima
+    private void fetchSeriesLinkMyCima(final Artist artist){
+        Log.i(TAG_MYCIMA, "fetchSeries url:"+artist.getUrl());
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String url = artist.getUrl();
+                    Log.i(TAG_MYCIMA, "ur:"+url);
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(0).get();
+                    //Elements links = doc.select("a[href]");
+
+                    //get link of episodes page
+                    String desc = doc.getElementsByClass("PostItemContent").text();
+
+                    //fetch session
+                    Elements boxs = doc.getElementsByClass("Episodes--Seasons--Episodes");
+                    for (Element box: boxs){
+
+                        Elements lis = box.getElementsByTag("a");
+
+                        Log.i("Count", "boxs:"+boxs.size());
+                        for (Element li : lis) {
+                            String title = li.text();
+                            String link = li.attr("href");
+
+                            Artist a = new Artist();
+                            a.setName(title);
+                            a.setUrl(link);
+                            a.setServer(Artist.SERVER_MyCima);
+                            a.setImage(artist.getImage());
+                            LinkSeriesActivity.seriesArtistList.add(a);
+                        }
+                    }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Collections.reverse(LinkSeriesActivity.seriesArtistList);
+                            textViewDesc.setText(desc);
                             adapterSeries.notifyDataSetChanged();
                             listViewArtists.setAdapter(adapterSeries);
                             //listViewArtists.setAdapter(adapter);

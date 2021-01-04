@@ -18,6 +18,7 @@ public class Artist {
     final static String SERVER_SHAHID4U = "Shahid4u";
     final static String SERVER_CIMA4U = "Cima4u";
     final static String SERVER_FASELHD = "FaselHd";
+    final static String SERVER_MyCima = "MyCima";
 
 
 

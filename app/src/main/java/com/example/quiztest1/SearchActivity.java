@@ -32,6 +32,7 @@ public class SearchActivity extends AppCompatActivity {
     String TAG_CIMA4U = "Cima4u";
     String TAG_AFLAM_PRO = "AflamPro";
     String TAG_FASELHD= "FaselHd";
+    String TAG_MyCima= "MyCima";
     static List<Artist> searchResultList;
     ArtistList adapterSearch;
 
@@ -60,7 +61,7 @@ public class SearchActivity extends AppCompatActivity {
                 Artist artist = searchResultList.get(position);
                 //  artist.setUrl("https://old.goo-2o.com/5dd7c58d8da14");
                 if (isSeriesLink(artist) ){
-                    if (artist.getServer().equals(Artist.SERVER_FASELHD)){
+                    if (artist.getServer().equals(Artist.SERVER_FASELHD) || artist.getServer().equals(Artist.SERVER_MyCima)){
                         fetchFaselHdSession(artist);
                     }else{
                         Log.i(TAG, "OnCreate. is series");
@@ -110,9 +111,10 @@ public class SearchActivity extends AppCompatActivity {
             listViewArtists.setAdapter(adapterSearch);
             searchAkwam(query, false);
             searchOldAkoamLinks(query, false);
-        searchFaselHd(query, false);
-        getShahid4uLinks(query, false);
-        searchCima4u(query, false);
+           searchFaselHd(query, false);
+           getShahid4uLinks(query, false);
+            searchCima4u(query, false);
+            searchMyCima(query, false);
       //     searchAflamPro(query, false);
      //   }
     }
@@ -138,9 +140,12 @@ public class SearchActivity extends AppCompatActivity {
         boolean isSeriesFaselHd= artist.getServer().equals(Artist.SERVER_FASELHD) &&
                 ( u.contains("/seasons") ||  n.contains("مسلسل") );
 
+        boolean isSeriesMyCima= artist.getServer().equals(Artist.SERVER_MyCima) &&
+                ( n.contains("مسلسل") || u.contains("series"));
+
        // boolean isSeriesOldAkwam= artist.getServer().equals(Artist.SERVER_OLD_AKWAM) &&
        //         ( u.contains("مسلسل") || u.contains("مسلسلات"));
-        return isSeriesAkwam || isSeriesShahid || isSeriesCima || isSeriesAflamPro || isSeriesFaselHd;
+        return isSeriesAkwam || isSeriesShahid || isSeriesCima || isSeriesAflamPro || isSeriesFaselHd || isSeriesMyCima;
     }
 
     /////////////////////////////////////////////////////////////////
@@ -457,6 +462,98 @@ public class SearchActivity extends AppCompatActivity {
             }
         }).start();
     }
+
+
+    //MyCima
+    private void searchMyCima(String query, boolean isSeries) {
+        if (!isSeries) {
+            query = "https://mycima.video/search/" + query;
+        }
+        final String url = query;
+        Log.i(TAG_MyCima, "search: "+query);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
+                    //Elements links = doc.select("a[href]");
+                    Log.i("result", doc.title());
+
+                    Elements lis = doc.getElementsByClass("GridItem");
+                    for (Element li : lis) {
+                        Log.i(TAG_MyCima, "element found: ");
+                            Artist a = new Artist();
+                            a.setServer(Artist.SERVER_MyCima);
+                            String link = li.getElementsByAttribute("href").attr("href");
+
+                            String name = li.getElementsByAttribute("title").attr("title");
+                            String image = li.getElementsByAttribute("style").attr("style");
+                            image = image.substring(image.indexOf('(')+1, image.indexOf(')'));
+                            Log.i(TAG_MyCima, "Link found: "+link);
+                            Log.i(TAG_MyCima, "name found: "+name);
+                            Log.i(TAG_MyCima, "image found: "+image);
+
+
+                            a.setName(name);
+                            a.setUrl(link);
+                            a.setImage(image);
+                            //Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
+
+                            // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+                            SearchActivity.searchResultList.add(a);
+
+                    }
+
+
+                    String seriesSearch = url+"/list/series/";
+                     doc = Jsoup.connect(seriesSearch).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
+                    //Elements links = doc.select("a[href]");
+                    Log.i("result", doc.title());
+
+                    Elements lis2 = doc.getElementsByClass("GridItem");
+                    for (Element li : lis2) {
+                        Log.i(TAG_MyCima, "element found: ");
+                        Artist a = new Artist();
+                        a.setServer(Artist.SERVER_MyCima);
+                        String link = li.getElementsByAttribute("href").attr("href");
+
+                        String name = li.getElementsByAttribute("title").attr("title");
+                        String image = li.getElementsByAttribute("style").attr("style");
+                        image = image.substring(image.indexOf('(')+1, image.indexOf(')'));
+                        Log.i(TAG_MyCima, "Link found: "+link);
+                        Log.i(TAG_MyCima, "name found: "+name);
+                        Log.i(TAG_MyCima, "image found: "+image);
+
+
+                        a.setName(name);
+                        a.setUrl(link);
+                        a.setImage(image);
+                        //Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
+
+                        // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+                        SearchActivity.searchResultList.add(a);
+
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            adapterSearch.notifyDataSetChanged();
+                            //listViewArtists.setAdapter(adapterSearch);
+                        }
+                    });
+                    // adapter.notifyDataSetChanged();
+
+
+                } catch (IOException e) {
+                    //builder.append("Error : ").append(e.getMessage()).append("\n");
+                    Log.i("fail", e.getMessage() + "");
+                }
+            }
+        }).start();
+    }
+
+
 
     //aflamPro
     private void searchAflamPro(String query, boolean isSeries) {

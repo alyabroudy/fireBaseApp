@@ -85,7 +85,104 @@ public class FetchServerActivity extends AppCompatActivity {
             Log.i("pageNumer", pageNumber+"");
             fetchVideoLinkFaselHd(artist);
         }
+        else if (pageNumber == 9){// fetch akwam isCheck link
+            Log.i("pageNumer", pageNumber+"");
+            fetchAkwamVideo(artist);
+        }
 
+    }
+
+
+    public void fetchAkwamVideo(Artist artist){
+        simpleWebView.getSettings().setBlockNetworkImage(false);
+        simpleWebView.getSettings().setAppCacheEnabled(false);
+        simpleWebView.getSettings().setLoadsImagesAutomatically(true);
+        simpleWebView.getSettings().setUseWideViewPort(true);
+        WebViewClient webViewClient = new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.d("WEBCLIENT 22", "OnreDirect url:"+url);
+                if (url.equals(artist.getUrl())){
+                    view.loadUrl(url);
+                }
+                return true;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                Log.d("WEBCLIENT", "onPageFinished");
+                view.evaluateJavascript("(function() { var x = document.getElementsByClassName(\"link btn btn-light\")[0]; return x.getAttribute(\"href\").toString();})();", new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String s) {
+                        Log.d("LogName", s); // Prints the string 'null' NOT Java null
+                        if (s.contains("akwam.download")){
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+
+                                    String type = "video/*";
+                                    String resultUrl = s.trim();
+
+                                    Uri uri = Uri.parse(resultUrl+"");
+                                    Intent videoIntent = new Intent(Intent.ACTION_VIEW, uri);
+                                    videoIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                    //  in1.setPackage("org.videolan.vlc");
+                                    videoIntent.setDataAndType(uri, type);
+                                    Log.i("video started", uri.toString() + "");
+                                    startActivity(videoIntent);
+                     //               simpleWebView.removeView(view);
+                       //             simpleWebView.removeAllViews();
+                         //           simpleWebView.stopLoading();
+
+
+                             /*       Intent resultIntent = new Intent();
+
+                                    resultIntent.putExtra("result", s);
+                                    resultIntent.putExtra("ARTIST_NAME", artist.getName());
+                                    resultIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                                    resultIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                                    resultIntent.putExtra("PAGE_URL", shahidPageUrl);
+                                    resultIntent.putExtra("EXCLUDED", shahidExclude);
+                                    resultIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                                    resultIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+                                    setResult(RESULT_OK, resultIntent);
+                                    simpleWebView.removeView(view);
+                                    simpleWebView.removeAllViews();
+                                    simpleWebView.stopLoading();
+                                    finish();
+
+                              */
+
+
+                                }
+                            });
+
+                            simpleWebView.removeView(view);
+                            simpleWebView.removeAllViews();
+                            simpleWebView.stopLoading();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                super.onLoadResource(view, url);
+                Log.d("WEBCLIENT","onLoadResource url:"+url);
+            }
+        };
+        //fetch video link from last page
+        simpleWebView.setWebViewClient(webViewClient);
+
+        //String url2 = "https://old.akwam.co/download/3c472024a3f1/High-Seas-S02-Ep01-720p-WEB-DL-akoam-net-mkv";
+        Log.i("videooo1", artist.getUrl());
+        simpleWebView.loadUrl(artist.getUrl());
     }
 
     public void fetchShahidOtherServers(Artist artist){

@@ -176,7 +176,7 @@ public class ServersListActivity extends AppCompatActivity {
                     startActivity(videoIntent);
 
                 }else if (artist.getServer().equals(Artist.SERVER_SHAHID4U)){
-                    if (artist.getUrl().contains("vidhd")){
+                    if (artist.getUrl().contains("vidhd") && artist.getIsVideo()){
                         //fetchVideoLindVidHd(artist);
                           String type = "video/*";
                         // if (artist.getServer().equals(Artist.SERVER_SHAHID4U)){
@@ -220,7 +220,7 @@ public class ServersListActivity extends AppCompatActivity {
                     videoIntent.setDataAndType(uri, type);
                     Log.i("video started", uri.toString() + "");
                     startActivity(videoIntent);
-            }else if (artist.getServer().equals(Artist.SERVER_FASELHD)){
+            }else if (artist.getServer().equals(Artist.SERVER_FASELHD) || artist.getServer().equals(Artist.SERVER_MyCima)){
                     String type = "video/*"; // It works for all video application
                     // }
 
@@ -300,6 +300,9 @@ public class ServersListActivity extends AppCompatActivity {
             else if (artist.getServer().equals(Artist.SERVER_FASELHD)){
                     fetchOneLinkFaselHd(artist, "");
             }
+            else if (artist.getServer().equals(Artist.SERVER_MyCima)){
+                fetchOneLinkMyCima(artist);
+            }
             else {
                 fetchSeriesLinkOldAkwam(artist);
             }
@@ -328,7 +331,8 @@ public class ServersListActivity extends AppCompatActivity {
 
                     // page2 fetch goo- links
                     String p2Caption = "/link/";
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
+
 
                     //description
                     Elements decDivs = doc.select("h2");
@@ -387,7 +391,8 @@ public class ServersListActivity extends AppCompatActivity {
                     String url = artist.getUrl();
                     Log.i(TAG_AKWAM, "FetchLinkVedio url:"+url);
 
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
+
 
                     Elements links = doc.select("a");
 
@@ -403,30 +408,62 @@ public class ServersListActivity extends AppCompatActivity {
                     }
 
                     doc = Jsoup.connect(url).get();
+
+                    //check if security caption
+
+
                     Elements divs = doc.getElementsByClass("btn-loader");
 
-                    String videoCaption = "akwam.download";
-                    for (Element div : divs) {
-                        Elements links2 =div.getElementsByAttribute("href");
-                        for (Element link:links2){
-                            if (link.attr("href").contains(videoCaption)) {
-                                //  databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
-                                //artist.setUrl(link.attr("href"));
-                                Log.i("akwam url3", link.attr("href"));
-                                url= link.attr("href");
-                                // artist.setUrl(url);
+                    Elements hs = doc.getElementsByTag("h1");
+
+
+
+
+                    boolean isCheck = divs.size() == 0;
+                    Log.i("isCheck", "size:"+isCheck);
+
+             //       if (!isCheck){
+                        String videoCaption = "akwam.download";
+                        for (Element div : divs) {
+                            Elements links2 =div.getElementsByAttribute("href");
+                            for (Element link:links2){
+                                if (link.attr("href").contains(videoCaption)) {
+                                    //  databaseArtist.child(artist.getId()).child("url").setValue(link.attr("href"));
+                                    //artist.setUrl(link.attr("href"));
+                                    Log.i("akwam url3", link.attr("href"));
+                                    url= link.attr("href");
+                                    // artist.setUrl(url);
+                                }
                             }
                         }
-                    }
-                    Log.i(TAG_AKWAM, "FetchOneLink url3:"+url);
+                        Log.i(TAG_AKWAM, "FetchOneLink url3:"+url);
 
-                    String type = "video/*"; // It works for all video application
-                    Uri uri = Uri.parse(url);
-                    Intent in1 = new Intent(Intent.ACTION_VIEW, uri);
-                    in1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    //  in1.setPackage("org.videolan.vlc");
-                    in1.setDataAndType(uri, type);
-                    startActivity(in1);
+                        String type = "video/*"; // It works for all video application
+                        Uri uri = Uri.parse(url);
+                        Intent in1 = new Intent(Intent.ACTION_VIEW, uri);
+                        in1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        //  in1.setPackage("org.videolan.vlc");
+                        in1.setDataAndType(uri, type);
+                        startActivity(in1);
+
+           /*        }else {
+
+                        Intent fetchServerIntent = new Intent(ServersListActivity.this, FetchServerActivity.class);
+                        fetchServerIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                        fetchServerIntent.putExtra("PAGE_NUMBER", 9);
+                        fetchServerIntent.putExtra("ARTIST_URL", url);
+                        fetchServerIntent.putExtra("SERVER_ID",  ServersListActivity.shahidServersId);
+                        fetchServerIntent.putExtra("ARTIST_NAME", artist.getName());
+                        fetchServerIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                        fetchServerIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                        fetchServerIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+
+                        Log.i(TAG_AKWAM, "Akwam check url:"+url);
+                        startActivity(fetchServerIntent);
+
+                    }
+
+            */
 
                 } catch (IOException e) {
                     //builder.append("Error : ").append(e.getMessage()).append("\n");
@@ -805,6 +842,7 @@ public class ServersListActivity extends AppCompatActivity {
             Log.i("Returned Result:"+requestCode, "method end resultcode:"+resultCode);
             //  textView1.setText(message);
         }
+
     }
 
     public void fetchOtherServersShahid(Artist artist, String pageUrl,String excluded){
@@ -1221,7 +1259,8 @@ public class ServersListActivity extends AppCompatActivity {
                 try {
                     String url = artist.getUrl();
                     Log.i(TAG_CIMA4U, "ur:"+url);
-                    Document doc = Jsoup.connect(url).timeout(6000).get();
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(6000).get();
+
                     //Elements links = doc.select("a[href]");
 
                     //get link of episodes page
@@ -1342,18 +1381,57 @@ public class ServersListActivity extends AppCompatActivity {
                         }
                     }
 
+
+
                     String res360 = protocol+serverName+webName+webEnd+resolution1+extension;
                     String res720 = protocol+serverName+webName+webEnd+resolution2+extension;
 
-                    Artist a = new Artist();
-                    a.setUrl(res720);
-                    a.setName("vidhd 720p");
-                    a.setServer(Artist.SERVER_SHAHID4U);
-                    a.setIsVideo(true);
-                    a.setImage(artist.getImage());
-                    a.setGenre(artist.getGenre());
+                    if (res360.length() < 45){
+                        Log.i("360", "smaller" +"");
+                        for (int i=0;i < resArray.length;i++){
+                            switch (resArray[i]){
+                                case "https":
+                                    webEnd=resArray[i-2]+"/"; //.net
+                                    webName=resArray[i-1]+"."; //.vidhd
+                                    break;
+                                case "ready":
+                                    serverName=resArray[i-1]+"."; //.c8  servername
+                                    break;
+                                case "label":
+                                    extension = "v."+resArray[i+1]; //v.mp4
+                                    break;
+                                case "360p":
+                                    resolution1= resArray[i+3]+"/";
+                                    break;
+                                case "720p":
+                                    resolution2= resArray[i+3]+"/";
+                                    break;
+                            }
+                        }
+                        res360 = protocol+serverName+webName+webEnd+resolution1+extension;
+                        res720 = protocol+serverName+webName+webEnd+resolution2+extension;
+                    }
+
+                    if (!resolution2.equals("")){
+                        Artist a = new Artist();
+                        a.setUrl(res720);
+                        a.setName("vidhd 720p");
+                        a.setServer(Artist.SERVER_SHAHID4U);
+                        a.setIsVideo(true);
+                        a.setImage(artist.getImage());
+                        a.setGenre(artist.getGenre());
+                        ServersListActivity.serversArtistList.add(a);
+                    }
+
+
 
                     Artist a2 = new Artist();
+
+                    if (res360.length() < 45){
+                        res360 = url2;
+                        a2.setIsVideo(false);
+                    }
+
                     a2.setUrl(res360);
                     a2.setName("vidhd 360p");
                     a2.setServer(Artist.SERVER_SHAHID4U);
@@ -1361,7 +1439,7 @@ public class ServersListActivity extends AppCompatActivity {
                     a2.setImage(artist.getImage());
                     a2.setGenre(artist.getGenre());
 
-                    ServersListActivity.serversArtistList.add(a);
+
                     ServersListActivity.serversArtistList.add(a2);
                     runOnUiThread(new Runnable() {
                         @Override
@@ -1376,6 +1454,57 @@ public class ServersListActivity extends AppCompatActivity {
                     //builder.append("Error : ").append(e.getMessage()).append("\n");
                     Log.i("fail", e.getMessage() + "");
                 }
+            }
+        }).start();
+    }
+
+
+    public void fetchOneLinkMyCima(Artist artist){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String url = artist.getUrl();
+                    Log.i(TAG_CIMA4U, "ur:"+url);
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(0).get();
+                    //Elements links = doc.select("a[href]");
+
+                    //get link of episodes page
+                    String desc = doc.getElementsByClass("StoryMovieContent").text();
+                    Elements uls = doc.getElementsByClass("List--Download--Mycima--Single");
+                    for (Element ul : uls) {
+                        Elements lis = ul.getElementsByTag ("li");
+                        for (Element li : lis) {
+
+                            String link = li.getElementsByAttribute("href").attr("href");
+                            String name = li.getElementsByTag("resolution").text();
+
+                            Artist a = new Artist();
+                            a.setName(name);
+                            a.setUrl(link);
+                            a.setImage(artist.getImage());
+                            a.setServer(Artist.SERVER_MyCima);
+                            a.setIsVideo(true);
+                            ServersListActivity.serversArtistList.add(a);
+                        }
+                        break;
+                    }
+
+
+
+                  runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textViewDesc.setText(desc);
+                            adapterServersList.notifyDataSetChanged();
+                            listViewArtists.setAdapter(adapterServersList);
+                        }});
+
+
+                } catch (IOException e) {
+                    Log.i("fail", e.getMessage()+"");
+                }
+
             }
         }).start();
     }
