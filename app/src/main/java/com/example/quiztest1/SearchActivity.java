@@ -115,6 +115,8 @@ public class SearchActivity extends AppCompatActivity {
            getShahid4uLinks(query, false);
             searchCima4u(query, false);
             searchMyCima(query, false);
+
+
       //     searchAflamPro(query, false);
      //   }
     }
@@ -193,38 +195,32 @@ public class SearchActivity extends AppCompatActivity {
 
 
                  */
-                    Document doc = Jsoup.connect(url).timeout(6000).get();
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(6000).get();
 
-                    Elements links = doc.select("a");
+                    Elements links = doc.getElementsByClass("entry-box");
                     for (Element link : links) {
-                        if (link.hasClass("box"))
-                        {
-                            if (
-                                    link.attr("href").contains("akwam.co/movie") ||
-                                            link.attr("href").contains("akwam.co/series") ||
-                                            link.attr("href").contains("akwam.co/episode")
-                            ){
-                                Artist a = new Artist();
-                                a.setServer(Artist.SERVER_AKWAM);
-                                a.setName(link.getElementsByAttribute("src").attr("alt"));
-                                a.setUrl(link.attr("href"));
-                                a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+                        String linkUrl = link.getElementsByClass("box").attr("href");
 
-                                SearchActivity.searchResultList.add(a);
-                           /*     runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        //if (!isSeries){
-                                        adapterSearch.notifyDataSetChanged();
+                        if (
+                                linkUrl.contains("akwam.co/movie") ||
+                                        linkUrl.contains("akwam.co/series") ||
+                                        linkUrl.contains("akwam.co/episode")
+                        ) {
 
-                                        //}
-                                        //  listViewArtists.setAdapter(adapterSearch);
-                                    }});
+                            Artist a = new Artist();
+                            a.setServer(Artist.SERVER_AKWAM);
+                            Log.i("link found", linkUrl + "");
 
-                            */
-                            }
+                            a.setName(link.getElementsByAttribute("src").attr("alt"));
+                            a.setUrl(linkUrl);
+                            a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+                            String rate = link.getElementsByClass("label rating").text();
+                            a.setRate(rate);
+                            Log.i("rate found", rate + "");
+                            SearchActivity.searchResultList.add(a);
                         }
                     }
+
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -301,6 +297,7 @@ public class SearchActivity extends AppCompatActivity {
                             a.setName(div.getElementsByTag("h3").text());
                             a.setUrl(div.getElementsByClass("image").attr("href"));
                             a.setImage(div.getElementsByClass("image").attr("data-src"));
+                            a.setRate(div.getElementsByClass("rate ti-star").text());
                             //Log.i("old image nn ", div.getElementsByTag("a").attr("style")+"");
 
                             // a.setImage(link.getElementsByAttribute("src").attr("data-src"));
@@ -345,7 +342,7 @@ public class SearchActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
 
                     Elements divs = doc.select("div");
                     for (Element div : divs) {
@@ -412,8 +409,8 @@ public class SearchActivity extends AppCompatActivity {
             public void run() {
 
                 try {
-                    Document doc = Jsoup.connect(url).timeout(6000).get();
-                    //Elements links = doc.select("a[href]");
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(6000).get();
+//Elements links = doc.select("a[href]");
                     Elements lis = doc.select("li[class]");
                     for (Element li : lis) {
                         Log.i(TAG_CIMA4U, "element found: ");
@@ -567,8 +564,8 @@ public class SearchActivity extends AppCompatActivity {
             public void run() {
 
                 try {
-                    Document doc = Jsoup.connect(url).get();
-                    //Elements links = doc.select("a[href]");
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
+//Elements links = doc.select("a[href]");
                     Elements lis = doc.select("li[class]");
                     for (Element li : lis) {
                         Log.i(TAG_AFLAM_PRO, "element found: ");
@@ -631,7 +628,8 @@ public class SearchActivity extends AppCompatActivity {
             public void run() {
 
                 try {
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
+
                     //Elements links = doc.select("a[href]");
                     Elements lis = doc.getElementsByClass("postDiv");
                     for (Element li : lis) {
@@ -650,6 +648,9 @@ public class SearchActivity extends AppCompatActivity {
                                 rate = span.text();
                                 break;
                             }
+                        }
+                        if (rate.equals("")){
+                            rate = li.getElementsByClass("pImdb").text();
                         }
 
 

@@ -282,7 +282,26 @@ public class MainActivity extends AppCompatActivity {
 
                 try {
                     Log.i(TAG_AKWAM, "Search url:"+url);
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
+
+                    Elements links = doc.getElementsByClass("entry-box");
+                    for (Element link : links) {
+                        Artist a = new Artist();
+                        a.setServer(Artist.SERVER_AKWAM);
+                        String linkUrl = link.getElementsByClass("box").attr("href");
+                        Log.i("link found", linkUrl+"");
+
+                        a.setName(link.getElementsByAttribute("src").attr("alt"));
+                        a.setUrl(linkUrl);
+                        a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+                        String rate =  link.getElementsByClass("label rating").text();
+                        a.setRate(rate);
+                        Log.i("rate found", rate+"");
+                        MainActivity.artistList.add(a);
+                    }
+
+
+                    /*
                     Elements links = doc.select("a");
                     for (Element link : links) {
                         if (link.hasClass("box"))
@@ -298,6 +317,10 @@ public class MainActivity extends AppCompatActivity {
                                 a.setName(link.getElementsByAttribute("src").attr("alt"));
                                 a.setUrl(link.attr("href"));
                                 a.setImage(link.getElementsByAttribute("src").attr("data-src"));
+                                String rate =  link.getElementsByClass("label rating").text();
+                                a.setRate(rate);
+                                Log.i("rate found", rate+"");
+                                Log.i("rate found2", link.getElementsByClass("label rating").html()+"");
 
                                 MainActivity.artistList.add(a);
                             /*    runOnUiThread(new Runnable() {
@@ -309,10 +332,14 @@ public class MainActivity extends AppCompatActivity {
                                        // listViewArtists.setAdapter(adapter);
                                     }});
 
-                             */
+
                             }
                         }
                     }
+
+                     */
+
+
                 } catch (IOException e) {
                     //builder.append("Error : ").append(e.getMessage()).append("\n");
                     Log.i(TAG_AKWAM, "error"+e.getMessage());
@@ -341,8 +368,8 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
 
                 try {
-                    Document doc = Jsoup.connect(url).timeout(6000).get();
-                    //Elements links = doc.select("a[href]");
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(6000).get();
+//Elements links = doc.select("a[href]");
                     Elements lis = doc.select("li[class]");
                     for (Element li : lis) {
                         Log.i(TAG_CIMA4U, "element found: ");
@@ -414,7 +441,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Document doc = Jsoup.connect(url).timeout(6000).get();
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(6000).get();
 
                     Elements divs = doc.select("div");
 
@@ -486,7 +513,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     Log.i("old akwam getLinks", "try before connect");
                     Log.i("old akwam links url", url + "s");
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
+
                     //Elements links = doc.select("a[href]");
                     Log.i("old akwam getLinks", "try after connect");
 
