@@ -26,6 +26,7 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ServersListActivity extends AppCompatActivity {
@@ -151,7 +152,22 @@ public class ServersListActivity extends AppCompatActivity {
                 Artist artist = serversArtistList.get(position);
 
                 if (artist.getServer().equals(Artist.SERVER_AKWAM)){
-                    fetchLinkVideoAkwam(artist);
+                    if (artist.getName().equals("playNow")){
+                        String type = "video/mp4"; // It works for all video application
+                        // }
+
+                     //   String url = artist.getUrl().trim().replace(" ", "");
+                        //  url = url.replace("/video.mp4", "");
+                        Uri uri = Uri.parse(artist.getUrl() + "");
+                        Intent videoIntent = new Intent(Intent.ACTION_VIEW, uri);
+                        videoIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        //  in1.setPackage("org.videolan.vlc");
+                        videoIntent.setDataAndType(uri, type);
+                        Log.i("video started", uri.toString() + "");
+                        startActivity(videoIntent);
+                    }else{
+                        fetchLinkVideoAkwam(artist);
+                    }
                 }
                 else if (artist.getServer().equals(Artist.SERVER_CIMA4U) ) {
 
@@ -235,7 +251,11 @@ public class ServersListActivity extends AppCompatActivity {
                     startActivity(videoIntent);
                 }
                 else {
-                    fetchLinkAndVideoOldAkwam(artist);
+                    if (artist.getUrl().contains("download")){
+                        fetchOldAkwamVideo(artist, null);
+                    }else {
+                        fetchLinkAndVideoOldAkwam(artist);
+                    }
                 }
             }
         });
@@ -331,8 +351,13 @@ public class ServersListActivity extends AppCompatActivity {
 
                     // page2 fetch goo- links
                     String p2Caption = "/link/";
-                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
-
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
 
                     //description
                     Elements decDivs = doc.select("h2");
@@ -391,7 +416,13 @@ public class ServersListActivity extends AppCompatActivity {
                     String url = artist.getUrl();
                     Log.i(TAG_AKWAM, "FetchLinkVedio url:"+url);
 
-                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                                    "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                                            "accept-encoding","gzip, deflate").header(
+                                                    "accept-language","en,en-US;q=0.9").header(
+                                                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
 
 
                     Elements links = doc.select("a");
@@ -407,7 +438,12 @@ public class ServersListActivity extends AppCompatActivity {
                         }
                     }
 
-                    doc = Jsoup.connect(url).get();
+                     doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9"
+                    ).timeout(6000).get();
 
                     //check if security caption
 
@@ -422,7 +458,7 @@ public class ServersListActivity extends AppCompatActivity {
                     boolean isCheck = divs.size() == 0;
                     Log.i("isCheck", "size:"+isCheck);
 
-             //       if (!isCheck){
+                    if (!isCheck){
                         String videoCaption = "akwam.download";
                         for (Element div : divs) {
                             Elements links2 =div.getElementsByAttribute("href");
@@ -446,7 +482,7 @@ public class ServersListActivity extends AppCompatActivity {
                         in1.setDataAndType(uri, type);
                         startActivity(in1);
 
-           /*        }else {
+                   }else {
 
                         Intent fetchServerIntent = new Intent(ServersListActivity.this, FetchServerActivity.class);
                         fetchServerIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
@@ -459,11 +495,13 @@ public class ServersListActivity extends AppCompatActivity {
                         fetchServerIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
 
                         Log.i(TAG_AKWAM, "Akwam check url:"+url);
-                        startActivity(fetchServerIntent);
+                        startActivityForResult(fetchServerIntent, 9);
 
                     }
 
-            */
+
+
+
 
                 } catch (IOException e) {
                     //builder.append("Error : ").append(e.getMessage()).append("\n");
@@ -493,7 +531,13 @@ public class ServersListActivity extends AppCompatActivity {
 
 
                     Log.i("shaihd fetchl 22", url);
-                    Document doc = Jsoup.connect(url).timeout(6000).get();
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
 
                     //here get servers
 
@@ -843,6 +887,34 @@ public class ServersListActivity extends AppCompatActivity {
             //  textView1.setText(message);
         }
 
+        else  if(requestCode == 9) // akwam isCheck
+        {
+            if (resultCode == RESULT_OK){
+                String serverUrl=data.getStringExtra("result");
+                String serverName = data.getStringExtra("ARTIST_SERVER");
+                String image = data.getStringExtra("ARTIST_IMAGE");
+                String aName = getWebName(serverUrl);
+                boolean isVideo = data.getBooleanExtra("ARTIST_IS_VIDEO", true);
+                Log.i("Returned Result", serverUrl + "name"+ serverName);
+                Artist a = new Artist();
+                a.setName("playNow");
+                a.setImage(image);
+                a.setIsVideo(isVideo);
+                a.setUrl(serverUrl);
+                a.setServer(serverName);
+                Log.i("Returned Final", serverUrl + "name"+ serverName);
+                ServersListActivity.serversArtistList.add(a);
+                Collections.reverse(ServersListActivity.serversArtistList);
+                adapterServersList.notifyDataSetChanged();
+                listViewArtists.setAdapter(adapterServersList);
+            }
+            if (resultCode == RESULT_CANCELED){
+                Log.i("Returned Result", "Nothing returned");
+            }
+            Log.i("Returned Result", "method end resultcode:"+resultCode);
+            //  textView1.setText(message);
+        }
+
     }
 
     public void fetchOtherServersShahid(Artist artist, String pageUrl,String excluded){
@@ -874,7 +946,13 @@ public class ServersListActivity extends AppCompatActivity {
                     String url = url2;
                     Log.i("shaihd fetchl1", url);
                     Log.i("shaihd fetchl 22", url);
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     //here get servers
                     String ss = url.trim().replace(" ", "");
                     Elements divs = doc.select("iframe");
@@ -1081,7 +1159,13 @@ public class ServersListActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     //Elements links = doc.select("a[href]");sw
 
                     //get profile image
@@ -1155,6 +1239,11 @@ public class ServersListActivity extends AppCompatActivity {
     }
 
     public void fetchOldAkwamVideo(Artist artist, String url){
+
+        if (url == null || url.equals("")){
+            url = artist.getUrl();
+        }
+
         WebViewClient webViewClient = new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -1229,7 +1318,7 @@ public class ServersListActivity extends AppCompatActivity {
 
         //String url2 = "https://old.akwam.co/download/3c472024a3f1/High-Seas-S02-Ep01-720p-WEB-DL-akoam-net-mkv";
         Log.i("videooo1", url);
-        simpleWebView.loadUrl(url);
+        simpleWebView.loadUrl(url+"#timerHolder");
     }
 
 
@@ -1259,8 +1348,15 @@ public class ServersListActivity extends AppCompatActivity {
                 try {
                     String url = artist.getUrl();
                     Log.i(TAG_CIMA4U, "ur:"+url);
-                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(6000).get();
+                  //  Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(6000).get();
 
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     //Elements links = doc.select("a[href]");
 
                     //get link of episodes page
@@ -1466,7 +1562,15 @@ public class ServersListActivity extends AppCompatActivity {
                 try {
                     String url = artist.getUrl();
                     Log.i(TAG_CIMA4U, "ur:"+url);
-                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(0).get();
+                   // Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(0).get();
+
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     //Elements links = doc.select("a[href]");
 
                     //get link of episodes page

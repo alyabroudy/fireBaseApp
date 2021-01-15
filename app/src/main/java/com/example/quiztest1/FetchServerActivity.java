@@ -1,6 +1,7 @@
 package com.example.quiztest1;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -12,6 +13,8 @@ import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+
+import java.io.File;
 
 public class FetchServerActivity extends AppCompatActivity {
 
@@ -104,6 +107,7 @@ public class FetchServerActivity extends AppCompatActivity {
                 Log.d("WEBCLIENT 22", "OnreDirect url:"+url);
                 if (url.equals(artist.getUrl())){
                     view.loadUrl(url);
+                    return false;
                 }
                 return true;
             }
@@ -121,27 +125,47 @@ public class FetchServerActivity extends AppCompatActivity {
                     @Override
                     public void onReceiveValue(String s) {
                         Log.d("LogName", s); // Prints the string 'null' NOT Java null
-                        if (s.contains("akwam.download")){
+                        if (s.contains(".download")){
+
+
+
+
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
 
-                                    String type = "video/*";
-                                    String resultUrl = s.trim();
+                                    Uri uri = Uri.parse(s+"");
+                                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                                    File file = new File(s);
+                                    Uri fileUri = Uri.fromFile(file);
 
-                                    Uri uri = Uri.parse(resultUrl+"");
+                                    intent.setDataAndType(fileUri, "video/*");
+                                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);//DO NOT FORGET THIS EVER
+                                    startActivity(intent);
+
+
+                 /*                   String type = "video/*";
+                                  //  String resultUrl = s.trim();
+
+                                    Uri uri = Uri.parse(s+"");
                                     Intent videoIntent = new Intent(Intent.ACTION_VIEW, uri);
                                     videoIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                     //  in1.setPackage("org.videolan.vlc");
                                     videoIntent.setDataAndType(uri, type);
                                     Log.i("video started", uri.toString() + "");
+                                    simpleWebView.removeView(view);
+                                    simpleWebView.removeAllViews();
+                                    simpleWebView.stopLoading();
                                     startActivity(videoIntent);
-                     //               simpleWebView.removeView(view);
+                                    finish();
+
+                  */
+                                    //               simpleWebView.removeView(view);
                        //             simpleWebView.removeAllViews();
                          //           simpleWebView.stopLoading();
 
-
-                             /*       Intent resultIntent = new Intent();
+/*
+                                   Intent resultIntent = new Intent();
 
                                     resultIntent.putExtra("result", s);
                                     resultIntent.putExtra("ARTIST_NAME", artist.getName());
@@ -157,15 +181,15 @@ public class FetchServerActivity extends AppCompatActivity {
                                     simpleWebView.stopLoading();
                                     finish();
 
-                              */
 
+*/
 
                                 }
                             });
 
-                            simpleWebView.removeView(view);
-                            simpleWebView.removeAllViews();
-                            simpleWebView.stopLoading();
+                 //           simpleWebView.removeView(view);
+                   //         simpleWebView.removeAllViews();
+                     //       simpleWebView.stopLoading();
                         }
                     }
                 });
@@ -289,65 +313,71 @@ public class FetchServerActivity extends AppCompatActivity {
     }
 
     public void fetchOldAkwamLinkAndVideo(Artist artist){
-        WebViewClient webViewClient1= new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // view.loadUrl(url);
-                Log.d("WEBCLIENT", "OnreDirect url:"+url);
-                //  fetchLinkVideoOldAkwam(artist, url);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Intent resultIntent = new Intent();
+        if (artist.getUrl().contains("/download")){
+            fetchOldAkwamVideo(artist);
+        }else {
+            WebViewClient webViewClient1= new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    // view.loadUrl(url);
+                    Log.d("WEBCLIENT", "OnreDirect url:"+url);
+                    //  fetchLinkVideoOldAkwam(artist, url);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Intent resultIntent = new Intent();
 
-                        resultIntent.putExtra("result", url);
-                       resultIntent.putExtra("ARTIST_NAME", artist.getName());
-                        resultIntent.putExtra("ARTIST_IMAGE", artist.getImage());
-                        resultIntent.putExtra("ARTIST_SERVER", artist.getServer());
-                        resultIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
+                            resultIntent.putExtra("result", url);
+                            resultIntent.putExtra("ARTIST_NAME", artist.getName());
+                            resultIntent.putExtra("ARTIST_IMAGE", artist.getImage());
+                            resultIntent.putExtra("ARTIST_SERVER", artist.getServer());
+                            resultIntent.putExtra("ARTIST_IS_VIDEO", artist.getIsVideo());
 
-                        setResult(RESULT_OK, resultIntent);
-                        simpleWebView.removeView(view);
-                        simpleWebView.removeAllViews();
-                        simpleWebView.stopLoading();
-                        finish();
-                    }});
+                            setResult(RESULT_OK, resultIntent);
+                            simpleWebView.removeView(view);
+                            simpleWebView.removeAllViews();
+                            simpleWebView.stopLoading();
+                            finish();
+                        }});
 
-                //view.loadUrl(" ");
+                    //view.loadUrl(" ");
 
-                return true;
-            }
+                    return true;
+                }
 
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
+                @Override
+                public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                    super.onPageStarted(view, url, favicon);
 
-            }
+                }
 
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                Log.d("WEBCLIENT", "onPageFinished");
-                //ok  sh       view.loadUrl("javascript:location.replace(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
-                //ok akwam   view.loadUrl("javascript:location.replace(document.getElementsByClassName(\"download_button\")[0].getAttribute(\"href\").toString());");
-                view.loadUrl("javascript:location.replace(document.getElementsByClassName('unauth_capsule clearfix')[0].getElementsByTagName('a')[0].getAttribute('ng-href'));");
-               //hh view.loadUrl("javascript:document.getElementsByClassName('unauth_capsule clearfix')[0].getElementsByTagName('a')[0].getAttribute('ng-href');");
-            }
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    super.onPageFinished(view, url);
+                    Log.d("WEBCLIENT", "onPageFinished");
+                    //ok  sh       view.loadUrl("javascript:location.replace(document.getElementsByTagName(\"iframe\")[0].getAttribute(\"src\").toString());");
+                    //ok akwam   view.loadUrl("javascript:location.replace(document.getElementsByClassName(\"download_button\")[0].getAttribute(\"href\").toString());");
+                    view.loadUrl("javascript:location.replace(document.getElementsByClassName('unauth_capsule clearfix')[0].getElementsByTagName('a')[0].getAttribute('ng-href'));");
+                    //hh view.loadUrl("javascript:document.getElementsByClassName('unauth_capsule clearfix')[0].getElementsByTagName('a')[0].getAttribute('ng-href');");
+                }
 
-            @Override
-            public void onLoadResource(WebView view, String url) {
-                super.onLoadResource(view, url);
-                //ok sh        view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+MainActivity.serverCounts+"].click()");
-               //hh view.loadUrl("javascript:window.document.getElementsByClassName('unauth_capsule clearfix')[0].getElementsByTagName('a')[0].click()");
-                Log.d("WEBCLIENT","onLoadResource");
-            }
-        };
+                @Override
+                public void onLoadResource(WebView view, String url) {
+                    super.onLoadResource(view, url);
+                    //ok sh        view.loadUrl("javascript:window.document.getElementsByClassName(\"servers-list\")[0].children["+MainActivity.serverCounts+"].click()");
+                    //hh view.loadUrl("javascript:window.document.getElementsByClassName('unauth_capsule clearfix')[0].getElementsByTagName('a')[0].click()");
+                    Log.d("WEBCLIENT","onLoadResource");
+                }
+            };
 
-        //old akwam fetch download page from goo-
-        simpleWebView.setWebViewClient(webViewClient1);
+            //old akwam fetch download page from goo-
+            simpleWebView.setWebViewClient(webViewClient1);
 
-        //String url = "http://old.goo-2o.com/5dd7c58d8da14";
-        simpleWebView.loadUrl(artist.getUrl());
+            //String url = "http://old.goo-2o.com/5dd7c58d8da14";
+            simpleWebView.loadUrl(artist.getUrl());
+        }
+
+
     }
 
     public void fetchOldAkwamVideo(Artist artist){

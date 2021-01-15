@@ -132,8 +132,13 @@ public class LinkSeriesActivity extends AppCompatActivity {
                 try {
                     Log.i(TAG_AKWAM, "FetchSeriesLink url:"+url);
 
-                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
-
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     //description
                     Elements decDivs = doc.select("h2");
 
@@ -202,7 +207,13 @@ public class LinkSeriesActivity extends AppCompatActivity {
                         url = url.concat("/episodes");
                     }
 
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     //Elements links = doc.select("a[href]");
 
                     Elements divs = doc.select("div[class]");
@@ -258,7 +269,13 @@ public class LinkSeriesActivity extends AppCompatActivity {
                 try {
                     String url = artist.getUrl();
                     Log.i(TAG_CIMA4U, "ur:"+url);
-                    Document doc = Jsoup.connect(url).timeout(6000).get();
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     //Elements links = doc.select("a[href]");
 
                     //get link of episodes page
@@ -282,7 +299,13 @@ public class LinkSeriesActivity extends AppCompatActivity {
                         }
                         // LinkSeriesActivity.seriesArtistList.add(a);
                     }
-                    doc = Jsoup.connect(url).timeout(6000).get();
+                     doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     Log.i(TAG_CIMA4U, "Second url:"+url);
 
                     Elements lis = doc.select("li");
@@ -330,7 +353,13 @@ public class LinkSeriesActivity extends AppCompatActivity {
                 try {
                     String url = artist.getUrl();
                     Log.i(TAG_AFLAM_PRO, "ur:"+url);
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     //Elements links = doc.select("a[href]");
 
 
@@ -412,7 +441,13 @@ public class LinkSeriesActivity extends AppCompatActivity {
                 try {
                     String url = artist.getUrl();
                     Log.i(TAG_FASELHD, "ur:"+url);
-                    Document doc = Jsoup.connect(url).get();
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     //Elements links = doc.select("a[href]");
 
 
@@ -476,7 +511,13 @@ public class LinkSeriesActivity extends AppCompatActivity {
                 try {
                     String url = artist.getUrl();
                     Log.i(TAG_MYCIMA, "ur:"+url);
-                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").timeout(0).get();
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     //Elements links = doc.select("a[href]");
 
                     //get link of episodes page

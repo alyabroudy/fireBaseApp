@@ -113,11 +113,11 @@ public class SearchActivity extends AppCompatActivity {
             searchOldAkoamLinks(query, false);
            searchFaselHd(query, false);
            getShahid4uLinks(query, false);
-            searchCima4u(query, false);
-            searchMyCima(query, false);
+           searchCima4u(query, false);
+           searchMyCima(query, false);
 
 
-      //     searchAflamPro(query, false);
+         //  searchAflamPro(query, false);
      //   }
     }
 
@@ -628,8 +628,13 @@ public class SearchActivity extends AppCompatActivity {
             public void run() {
 
                 try {
-                    Document doc = Jsoup.connect(url).header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header("User-Agent","Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").get();
-
+                    Document doc = Jsoup.connect(url).header(
+                            "Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8").header(
+                            "User-Agent"," Mozilla/5.0 (Linux; Android 8.1.0; Android SDK built for x86 Build/OSM1.180201.031; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.100 Mobile Safari/537.36").header(
+                            "accept-encoding","gzip, deflate").header(
+                            "accept-language","en,en-US;q=0.9").header(
+                            "x-requested-with","pc1"
+                    ).timeout(6000).get();
                     //Elements links = doc.select("a[href]");
                     Elements lis = doc.getElementsByClass("postDiv");
                     for (Element li : lis) {
